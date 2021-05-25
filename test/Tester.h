@@ -13,6 +13,12 @@ public:
     char first_name[11];
     char address[16];
 
+    Person() {
+        last_name[0] = 0;
+        first_name[0] = 0;
+        address[0] = 0;
+    }
+
     bool pack(Buffer &buffer) {
         bool result;
         buffer.clear();
@@ -40,7 +46,7 @@ public:
 
 class Tester {
 public:
-    static int buffer_test();
+    static bool buffer_test();
 };
 
 

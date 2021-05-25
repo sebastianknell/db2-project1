@@ -17,7 +17,7 @@ void Buffer::clear() {
     buffer_size = 0;
 }
 
-bool Buffer::read(istream &stream) {
+bool Buffer::read(ifstream &stream) {
     clear();
     stream.read((char *)&buffer_size, sizeof(buffer_size));
     if (stream.fail()) return false;
@@ -26,8 +26,8 @@ bool Buffer::read(istream &stream) {
     return stream.good();
 }
 
-bool Buffer::write(ostream &stream) const {
-    stream.write((const char *)&buffer_size, sizeof(buffer_size));
+bool Buffer::write(ofstream &stream) const {
+    stream.write((char *)&buffer_size, sizeof(buffer_size));
     stream.write(buffer, buffer_size);
     return stream.good();
 }

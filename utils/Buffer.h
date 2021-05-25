@@ -19,8 +19,8 @@ class Buffer {
 public:
     Buffer(char delim = '|', int max_b = 1000);
     void clear();
-    bool read(istream &);
-    bool write(ostream &) const;
+    bool read(ifstream &);
+    bool write(ofstream &) const;
     bool pack(const char*, int size = -1);
     bool unpack(char*);
 };
