@@ -21,7 +21,7 @@ bool Buffer::read(ifstream &stream) {
     clear();
     stream.read((char *)&buffer_size, sizeof(buffer_size));
     if (stream.fail()) return false;
-    if (buffer_size < max_bytes) return false;
+    if (buffer_size > max_bytes) return false;
     stream.read(buffer, buffer_size);
     return stream.good();
 }
@@ -61,4 +61,9 @@ bool Buffer::unpack(char *str) {
     strncpy(str, &buffer[start], len);
     str[len] = 0;
     return true;
+}
+
+void Buffer::print_buffer() {
+    cout << buffer;
+    cout << endl;
 }

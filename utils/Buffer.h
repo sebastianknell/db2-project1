@@ -23,6 +23,7 @@ public:
     bool write(ofstream &) const;
     bool pack(const char*, int size = -1);
     bool unpack(char*);
+    void print_buffer();
 };
 
 

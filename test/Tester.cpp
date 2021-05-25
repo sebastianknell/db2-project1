@@ -24,7 +24,7 @@ bool Tester::buffer_test() {
     test_out.close();
 
     Person p2;
-    ifstream test_in("deltext.dat", ios::binary);
+    ifstream test_in("deltext.dat", ios::in | ios::binary);
     if (!test_in) return false;
     Buffer buffer_in;
     success = buffer_in.read(test_in);

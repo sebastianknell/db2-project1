@@ -30,7 +30,6 @@ public:
 
     bool unpack(Buffer &buffer) {
         bool result;
-        buffer.clear();
         result = buffer.unpack(last_name);
         result = result && buffer.unpack(first_name);
         result = result && buffer.unpack(address);
