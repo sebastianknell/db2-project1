@@ -1,6 +1,9 @@
 //
-// Created by Sebastian Knell on 24/05/21.
+// Created by Sebastian Knell on 25/05/21.
 //
+
+#ifndef DB2_PROJECT1_TESTER_H
+#define DB2_PROJECT1_TESTER_H
 
 #include "../utils/Buffer.h"
 
@@ -35,30 +38,10 @@ public:
     }
 };
 
-int main() {
-    Person p1;
-    strcpy(p1.last_name, "Knell");
-    strcpy(p1.first_name, "Sebastian");
-    strcpy(p1.address, "Avenida 1234");
+class Tester {
+public:
+    static int buffer_test();
+};
 
-    Buffer buffer;
-    ofstream test_out("deltext.dat", ios::out | ios::binary);
-    p1.pack(buffer);
-    buffer.write(test_out);
-    strcpy(p1.first_name, "Daniel");
-    p1.pack(buffer);
-    buffer.write(test_out);
 
-    Person p2;
-    ifstream test_in("deltext.dat", ios::in | ios::binary);
-    Buffer buffer_in;
-    buffer_in.read(test_in);
-    p1.unpack(buffer_in);
-    p1.print();
-    buffer_in.read(test_in);
-    p2.unpack(buffer_in);
-    p2.print();
-    test_in.close();
-
-    return 0;
-}
+#endif //DB2_PROJECT1_TESTER_H
