@@ -6,6 +6,7 @@
 #define DB2_PROJECT1_SEQUENTIALFILE_H
 
 #include <iostream>
+#include <utility>
 #include <vector>
 #include <string>
 #include "utils/rapidcsv.h"
@@ -18,11 +19,13 @@ class SequentialFile {
     string data_file;
     string aux_file = "aux.dat";
 public:
-    void load_data(string filename);
-    vector<Record> search(int key);
-    vector<Record> range_search(int begin_key, int end_key);
-    void insert(Record r);
-    void remove(int key);
+    explicit SequentialFile(string data_file = "seq-file-data.dat"): data_file(std::move(data_file)) {};
+    void load_data(string);
+    void print_all();
+    vector<Record> search(int);
+    vector<Record> range_search(int, int);
+    void insert(Record);
+    void remove(int);
 };
 
 

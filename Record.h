@@ -22,6 +22,7 @@ public:
     void pack(Buffer &buffer);
     void unpack(Buffer &buffer);
     void print();
+    void load_data(vector<string>);
 };
 
 

@@ -12,7 +12,7 @@ bool Tester::buffer_test() {
 
     Buffer buffer;
     bool success;
-    ofstream test_out("deltext.dat", ios::out | ios::binary);
+    ofstream test_out("buffer_test.dat", ios::out | ios::binary);
     if (!test_out.good()) return false;
     p1.pack(buffer);
     success = buffer.write(test_out);
@@ -24,7 +24,7 @@ bool Tester::buffer_test() {
     test_out.close();
 
     Person p2;
-    ifstream test_in("deltext.dat", ios::in | ios::binary);
+    ifstream test_in("buffer_test.dat", ios::in | ios::binary);
     if (!test_in) return false;
     Buffer buffer_in;
     success = buffer_in.read(test_in);
@@ -45,7 +45,7 @@ bool Tester::record_test() {
     r1.data.emplace_back("Sebastian");
     Buffer buffer;
     bool success;
-    ofstream test_out("a.dat", ios::out | ios::binary);
+    ofstream test_out("record_test.dat", ios::out | ios::binary);
     if (!test_out.good()) return false;
     r1.pack(buffer);
     success = buffer.write(test_out);
