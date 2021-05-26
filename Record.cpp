@@ -22,7 +22,7 @@ void Record::unpack(Buffer &buffer) {
         for (auto &field : data) {
             if (buffer.unpack(temp)) {
                 string field_str(temp);
-                data.push_back(field_str);
+                field = field_str;
             }
             // throw error
         }
@@ -32,4 +32,5 @@ void Record::unpack(Buffer &buffer) {
 
 void Record::print() {
     for (auto &field : data) cout << field << " ";
+    cout << endl;
 }
