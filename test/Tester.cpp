@@ -38,3 +38,36 @@ bool Tester::buffer_test() {
     test_in.close();
     return success;
 }
+
+bool Tester::record_test() {
+    Record r1;
+    r1.data.emplace_back("Knell");
+    r1.data.emplace_back("Sebastian");
+    Buffer buffer;
+    bool success;
+    ofstream test_out("a.dat", ios::out | ios::binary);
+    if (!test_out.good()) return false;
+    r1.pack(buffer);
+    success = buffer.write(test_out);
+    if (!success) return false;
+    r1.data[1] = "Daniel";
+    r1.pack(buffer);
+    success = buffer.write(test_out);
+    if (!success) return false;
+    test_out.close();
+
+    Record r2;
+    ifstream test_in("a.dat", ios::in | ios::binary);
+    if (!test_in) return false;
+    Buffer buffer_in;
+    success = buffer_in.read(test_in);
+    if (!success) return false;
+    r2.unpack(buffer_in);
+    r2.print();
+    success = buffer_in.read(test_in);
+    if (!success) return false;
+    r2.unpack(buffer_in);
+    r2.print();
+    test_in.close();
+    return success;
+}

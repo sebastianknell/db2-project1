@@ -6,6 +6,7 @@
 #define DB2_PROJECT1_TESTER_H
 
 #include "../utils/Buffer.h"
+#include "../Record.h"
 
 class Person {
 public:
@@ -46,6 +47,7 @@ public:
 class Tester {
 public:
     static bool buffer_test();
+    static bool record_test();
 };
 
 

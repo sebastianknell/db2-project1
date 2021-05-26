@@ -5,18 +5,23 @@
 #ifndef DB2_PROJECT1_SEQUENTIALFILE_H
 #define DB2_PROJECT1_SEQUENTIALFILE_H
 
+#include <iostream>
 #include <vector>
+#include <string>
+#include "utils/rapidcsv.h"
+#include "utils/Buffer.h"
+#include "Record.h"
+
 using namespace std;
 
-struct Register {
-    int id;
-};
-
 class SequentialFile {
+    string data_file;
+    string aux_file = "aux.dat";
 public:
-    vector<Register> search(int key);
-    vector<Register> range_search(int begin_key, int end_key);
-    void insert(Register r);
+    void load_data(string filename);
+    vector<Record> search(int key);
+    vector<Record> range_search(int begin_key, int end_key);
+    void insert(Record r);
     void remove(int key);
 };
 

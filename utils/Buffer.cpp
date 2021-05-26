@@ -33,7 +33,7 @@ bool Buffer::write(ofstream &stream) const {
 }
 
 bool Buffer::pack(const char *str, int size) {
-    short len;
+    short len = 0;
     if (size >= 0) len = size;
     else len = strlen(str);
     if (len > strlen(str)) return false;

@@ -1,9 +1,10 @@
 #include <iostream>
-#include "test/tester.h"
+#include "test/Tester.h"
 
 using namespace std;
 
 int main() {
-    Tester::buffer_test();
+//    Tester::buffer_test();
+    Tester::record_test();
     return 0;
 }
