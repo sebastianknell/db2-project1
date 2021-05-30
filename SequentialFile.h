@@ -27,7 +27,7 @@ struct FixedRecord {
     char hypertension[2]{};
     char heart_disease[2]{};
     char ever_married[4]{};
-    char work_type[11]{};
+    char work_type[14]{};
     char residence_type[6]{};
     char avg_glucose[7]{};
     char bmi[7]{};
@@ -55,6 +55,7 @@ struct FixedRecord {
     int get_key() const {return stoi(id);}
 };
 
+void print_record(FixedRecord &);
 
 class SequentialFile {
     string data_file;

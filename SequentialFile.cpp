@@ -4,7 +4,15 @@
 
 #include "SequentialFile.h"
 
-static void print_record(FixedRecord &record) {
+static long get_file_size(ifstream &stream) {
+    auto pos = stream.tellg();
+    stream.seekg(0, ios::end);
+    auto size = stream.tellg();
+    stream.seekg(pos);
+    return size;
+}
+
+void print_record(FixedRecord &record) {
     cout << record.id << " ";
     cout << record.gender << " ";
     cout << record.age << " ";
@@ -52,11 +60,25 @@ void SequentialFile::print_all() {
 
 vector<FixedRecord> SequentialFile::search(int key) {
     vector<FixedRecord> records;
-    FixedRecord temp;
     ifstream in_file(data_file, ios::in | ios::binary);
-    while (readRecord(temp, in_file)) {
-        if (temp.get_key() == key) records.push_back(temp);
-        if (temp.get_key() > key) break;
+    long record_size = sizeof(FixedRecord);
+    long l = 0;
+    long r = get_file_size(in_file) / record_size;
+    while (r >= l) {
+        FixedRecord temp;
+        long m = (l + r) / 2;
+//        if (m % sizeof(FixedRecord) != 0) break;
+        in_file.seekg(m * record_size);
+        readRecord(temp, in_file);
+        if (temp.get_key() < key) l = m+1;
+        else if (temp.get_key() > key) r = m-1;
+        else {
+            while (temp.get_key() == key) {
+                records.push_back(temp);
+                readRecord(temp, in_file);
+            }
+            break;
+        }
     }
     in_file.close();
     return records;
