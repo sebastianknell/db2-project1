@@ -4,6 +4,30 @@
 
 #include "SequentialFile.h"
 
+static long get_file_size(ifstream &stream) {
+    auto pos = stream.tellg();
+    stream.seekg(0, ios::end);
+    auto size = stream.tellg();
+    stream.seekg(pos);
+    return size;
+}
+
+static void find_next_record(ifstream &stream) {
+    // Brute force
+    Buffer buffer;
+    long pos = stream.tellg();
+    auto start_pos = pos;
+    auto size = get_file_size(stream);
+    bool success;
+    do {
+        success = buffer.read(stream);
+        stream.seekg(++pos);
+    } while (!success || buffer.get_buffer_length() == 0);
+    auto movement = pos - start_pos;
+    // Return to position before buffer
+    stream.seekg(pos - 1);
+}
+
 void SequentialFile::load_data(const string& from_filename) {
     Record temp;
     ofstream out_file(data_file, ios::out | ios::binary);
@@ -35,9 +59,22 @@ vector<Record> SequentialFile::search(int key) {
     vector<Record> records;
     Record temp;
     ifstream in_file(data_file, ios::in | ios::binary);
-    while (readRecord(temp, in_file)) {
-        if (temp.get_key() == key) records.push_back(temp);
-        if (temp.get_key() > key) break;
+
+    long l = 0;
+    long r = get_file_size(in_file);
+    while (r > l) {
+        long m = (l + r) / 2;
+        in_file.seekg(m);
+        readRecord(temp, in_file);
+        if (temp.get_key() < key) l = m+1;
+        else if (temp.get_key() > key) r = m-1;
+        else {
+            while (temp.get_key() == key) {
+                records.push_back(temp);
+                readRecord(temp, in_file);
+            }
+            break;
+        }
     }
     in_file.close();
     return records;
@@ -68,6 +105,9 @@ void SequentialFile::merge_data() {
 
 bool SequentialFile::readRecord(Record &record, ifstream &stream) {
     Buffer buffer;
+    // Seek stream to correct position
+    find_next_record(stream);
+    
     bool success = buffer.read(stream);
     if (!success) return false;
     record.unpack(buffer);

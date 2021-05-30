@@ -18,6 +18,7 @@ class Buffer {
     int next_byte;
 public:
     Buffer(char delim = '|', int max_b = 1000);
+    ~Buffer() {delete[] buffer;}
     void clear();
     bool read(ifstream &);
     bool write(ofstream &) const;
@@ -25,6 +26,7 @@ public:
     bool unpack(char*);
     void print_buffer();
     int get_buffer_size() const {return buffer_size;}
+    unsigned long get_buffer_length() const {return strlen(buffer);}
     int get_max_bytes() const {return max_bytes;}
 };
 
