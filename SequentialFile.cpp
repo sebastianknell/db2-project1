@@ -32,7 +32,15 @@ void SequentialFile::print_all() {
 }
 
 vector<Record> SequentialFile::search(int key) {
-    return vector<Record>();
+    vector<Record> records;
+    Record temp;
+    ifstream in_file(data_file, ios::in | ios::binary);
+    while (readRecord(temp, in_file)) {
+        if (temp.get_key() == key) records.push_back(temp);
+        if (temp.get_key() > key) break;
+    }
+    in_file.close();
+    return records;
 }
 
 vector<Record> SequentialFile::range_search(int begin_key, int end_key) {
@@ -42,9 +50,8 @@ vector<Record> SequentialFile::range_search(int begin_key, int end_key) {
 void SequentialFile::insert(Record record) {
     ofstream out_file(aux_file, ios::out | ios::binary);
     if (!out_file) return;
-    Buffer buffer;
-    record.pack(buffer);
-    buffer.write(out_file);
+    // Search position
+    // Insert
     if (out_file.tellp() >= max_aux_size) {
         merge_data();
     }
@@ -64,6 +71,7 @@ bool SequentialFile::readRecord(Record &record, ifstream &stream) {
     bool success = buffer.read(stream);
     if (!success) return false;
     record.unpack(buffer);
+    stream.read((char*)&record.f_type, sizeof(record.f_type));
     stream.read((char*)&record.next, sizeof(record.next));
     return stream.good();
 }
@@ -73,7 +81,8 @@ bool SequentialFile::writeRecord(Record &record, ofstream &stream, unsigned long
     record.pack(buffer);
     bool success = buffer.write(stream);
     if (!success) return false;
-    offset += buffer.get_buffer_size() + sizeof(int) + sizeof(unsigned long); // TODO refactor
+    offset += buffer.get_buffer_size() + sizeof(int)*2 + sizeof(unsigned long); // TODO refactor
+    stream.write((char*)&record.f_type, sizeof(record.f_type));
     stream.write((char*)&offset, sizeof(offset));
     return stream.good();
 }

@@ -9,6 +9,11 @@
 #include <vector>
 #include "utils/Buffer.h"
 
+enum file_type {
+    data,
+    aux
+};
+
 class Record {
     /*char id[7];
     char gender[6];
@@ -19,12 +24,14 @@ class Record {
     char self_employed[10];*/
 public:
     long next;
-    Record(): next(0) {}
+    file_type f_type;
+    Record(): next(0), f_type(file_type::data) {}
     vector<string> data;
     void pack(Buffer &buffer);
     void unpack(Buffer &buffer);
     void print();
     void load_data(vector<string>);
+    int get_key() {return stoi(data[0]);}
 };
 
 
