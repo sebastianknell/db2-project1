@@ -10,6 +10,7 @@ Buffer::Buffer(char delim, int max_b) {
     max_bytes = max_b;
     buffer = new char[max_bytes];
     buffer_size = 0;
+    next_byte = 0;
 }
 
 void Buffer::clear() {

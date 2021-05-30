@@ -24,6 +24,8 @@ public:
     bool pack(const char*, int size = -1);
     bool unpack(char*);
     void print_buffer();
+    int get_buffer_size() const {return buffer_size;}
+    int get_max_bytes() const {return max_bytes;}
 };
 
 

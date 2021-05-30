@@ -8,13 +8,15 @@
 
 void Record::pack(Buffer &buffer) {
     buffer.clear();
+//    string next_str = to_string(next);
+//    data.push_back(next_str);
     for (const auto &field : data) {
         buffer.pack(field.data());
     }
 }
 
 void Record::unpack(Buffer &buffer) {
-    char* temp = new char[1000];
+    char* temp = new char[buffer.get_max_bytes()];
     if (data.empty()) {
         while (buffer.unpack(temp)) {
             string field_str(temp);
@@ -29,6 +31,7 @@ void Record::unpack(Buffer &buffer) {
             else throw runtime_error("Couldn't unpack buffer");
         }
     }
+//    next = stol(data.back());
     delete[] temp;
 }
 

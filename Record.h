@@ -18,6 +18,8 @@ class Record {
     char ever_married[3];
     char self_employed[10];*/
 public:
+    long next;
+    Record(): next(0) {}
     vector<string> data;
     void pack(Buffer &buffer);
     void unpack(Buffer &buffer);
