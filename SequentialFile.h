@@ -33,7 +33,7 @@ struct FixedRecord {
     char bmi[7]{};
     char smoking_status[16]{};
     char stroke[2]{};
-    file_type f_type;
+    file_type f_type = file_type::data;
     long next;
 
     void load_data(vector<string> data) {
@@ -56,13 +56,13 @@ struct FixedRecord {
 };
 
 void print_record(FixedRecord &);
+static bool readRecord(FixedRecord &, fstream&);
+static bool writeRecord(FixedRecord &, fstream&, long&);
 
 class SequentialFile {
     string data_file;
     string aux_file = "aux.dat";
     int max_aux_size; // max size of aux.dat in bytes
-    bool readRecord(FixedRecord &, ifstream&);
-    bool writeRecord(FixedRecord &, ofstream&, long&);
 public:
     explicit SequentialFile(string data_file = "seq-file-data.dat", int max_aux_size = 1000): data_file(std::move(data_file)), max_aux_size(
             max_aux_size) {};

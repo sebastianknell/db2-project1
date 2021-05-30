@@ -4,12 +4,30 @@
 
 #include "SequentialFile.h"
 
-static long get_file_size(ifstream &stream) {
+static long get_file_size(fstream &stream) {
     auto pos = stream.tellg();
     stream.seekg(0, ios::end);
     auto size = stream.tellg();
     stream.seekg(pos);
     return size;
+}
+
+static long find(int key, fstream &stream) {
+    long record_size = sizeof(FixedRecord);
+    long l = 0;
+    long r = get_file_size(stream) / record_size;
+    FixedRecord temp;
+    while (r >= l) {
+        long m = (l + r) / 2;
+        stream.seekg(m * record_size);
+        readRecord(temp, stream);
+        if (temp.get_key() < key) l = m+1;
+        else if (temp.get_key() > key) r = m-1;
+        else {
+            return m * record_size;
+        }
+    }
+    return -1;
 }
 
 void print_record(FixedRecord &record) {
@@ -29,8 +47,8 @@ void print_record(FixedRecord &record) {
 }
 
 void SequentialFile::load_data(const string& from_filename) {
-//    FixedRecord temp;
-    ofstream out_file(data_file, ios::out | ios::binary);
+    FixedRecord temp;
+    fstream out_file(data_file, ios::out | ios::binary);
     if (!out_file) return;
     rapidcsv::Document document(from_filename);
     auto len = document.GetRowCount();
@@ -38,7 +56,6 @@ void SequentialFile::load_data(const string& from_filename) {
     for (int i = 0; i < len; i++) {
         vector<string> row = document.GetRow<string>(i);
         // Save row to record and write to file
-        FixedRecord temp;
         temp.load_data(row);
         writeRecord(temp, out_file, offset);
     }
@@ -46,11 +63,11 @@ void SequentialFile::load_data(const string& from_filename) {
 }
 
 void SequentialFile::print_all() {
-    ifstream in_file(data_file, ios::in | ios::binary);
+    fstream in_file(data_file, ios::in | ios::binary);
     if (!in_file) return;
     bool success;
+    FixedRecord temp;
     do {
-        FixedRecord temp;
         success = readRecord(temp, in_file);
         print_record(temp);
         cout << in_file.tellg() << " " << temp.next << endl;
@@ -60,25 +77,14 @@ void SequentialFile::print_all() {
 
 vector<FixedRecord> SequentialFile::search(int key) {
     vector<FixedRecord> records;
-    ifstream in_file(data_file, ios::in | ios::binary);
-    long record_size = sizeof(FixedRecord);
-    long l = 0;
-    long r = get_file_size(in_file) / record_size;
-    while (r >= l) {
-        FixedRecord temp;
-        long m = (l + r) / 2;
-//        if (m % sizeof(FixedRecord) != 0) break;
-        in_file.seekg(m * record_size);
+    fstream in_file(data_file, ios::in | ios::binary);
+    FixedRecord temp;
+    long pos = find(key, in_file);
+    in_file.seekg(pos);
+    readRecord(temp, in_file);
+    while (temp.get_key() == key) {
+        records.push_back(temp);
         readRecord(temp, in_file);
-        if (temp.get_key() < key) l = m+1;
-        else if (temp.get_key() > key) r = m-1;
-        else {
-            while (temp.get_key() == key) {
-                records.push_back(temp);
-                readRecord(temp, in_file);
-            }
-            break;
-        }
     }
     in_file.close();
     return records;
@@ -89,7 +95,7 @@ vector<FixedRecord> SequentialFile::range_search(int begin_key, int end_key) {
 }
 
 void SequentialFile::insert(FixedRecord record) {
-    ofstream out_file(aux_file, ios::out | ios::binary);
+    ofstream out_file(aux_file, ios::app | ios::binary);
     if (!out_file) return;
     // Search position
     // Insert
@@ -104,30 +110,38 @@ void SequentialFile::remove(int key) {
 
 // Merge data file and aux file
 void SequentialFile::merge_data() {
-    
+    fstream data(data_file, ios::binary);
+    fstream aux(aux_file, ios::binary);
+    FixedRecord temp1;
+    vector<FixedRecord> records;
+    do {
+        readRecord(temp1, data);
+        records.push_back(temp1);
+        if (temp1.f_type == file_type::aux) {
+            // Read all aux records in chain
+            aux.seekg(temp1.next);
+            FixedRecord temp2;
+            do {
+                readRecord(temp2, aux);
+                records.push_back(temp2);
+                aux.seekg(temp2.next);
+            } while (temp2.f_type == file_type::aux);
+        }
+    } while (data);
+
+    long offset = 0;
+    for (auto record : records) {
+        record.f_type = file_type::data;
+        writeRecord(record, data, offset);
+    }
 }
 
-bool SequentialFile::readRecord(FixedRecord &record, ifstream &stream) {
-    /*Buffer buffer;
-    bool success = buffer.read(stream);
-    if (!success) return false;
-    record.unpack(buffer);
-    stream.read((char*)&record.f_type, sizeof(record.f_type));
-    stream.read((char*)&record.next, sizeof(record.next));*/
+bool readRecord(FixedRecord &record, fstream &stream) {
     stream.read((char*)&record, sizeof(record));
     return stream.good();
 }
 
-bool SequentialFile::writeRecord(FixedRecord &record, ofstream &stream, long &offset) {
-    /*Buffer buffer;
-    record.pack(buffer);
-    bool success = buffer.write(stream);
-    if (!success) return false;
-    offset += buffer.get_buffer_size() + sizeof(int)*2 + sizeof(unsigned long); // TODO refactor
-    stream.write((char*)&record.f_type, sizeof(record.f_type));
-    stream.write((char*)&offset, sizeof(offset));*/
-
-    record.f_type = file_type::data;
+bool writeRecord(FixedRecord &record, fstream &stream, long &offset) {
     offset += sizeof(record);
     record.next = offset;
     stream.write((char*)&record, sizeof(record));
