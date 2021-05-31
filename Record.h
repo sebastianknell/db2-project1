@@ -25,6 +25,7 @@ public:
     void unpack(Buffer &buffer);
     void print();
     void load_data(vector<string>);
+    int get_key() const {return stoi(data[0]);}
 };
 
 

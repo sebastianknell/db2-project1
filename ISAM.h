@@ -15,10 +15,18 @@
 
 using namespace std;
 
+struct IndexRecord {
+    int id{};
+    long pos{};
+};
+
 class ISAM {
     string dataFile;
     string indexFile = "index.dat";
     int maxIndexSize;
+
+    bool readIndex(IndexRecord&, ifstream&);
+    bool writeIndex(IndexRecord&, ofstream&);
     bool readRecord(Record &, ifstream&);
     bool writeRecord(Record &, ofstream&, unsigned long&);
 
