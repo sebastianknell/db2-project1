@@ -67,3 +67,31 @@ bool ISAM::writeRecord(Record &record, ofstream &stream, unsigned long &offset) 
     bool success = buffer.write(stream);
     return success;
 }
+
+ long ISAM::getFileSize(ifstream &stream) {
+    auto pos = stream.tellg();
+    stream.seekg(0, ios::end);
+    auto size = stream.tellg();
+    stream.seekg(pos);
+    return size;
+}
+
+Record ISAM::search(int id){
+    ifstream data(dataFile, ios::binary);
+    ifstream index(indexFile, ios::binary);
+    IndexRecord indexRecord;
+    Record temp;
+    long recordSize = sizeof(indexRecord);
+    long r = getFileSize(index) / recordSize;
+    while(r >= 1) {
+        long mid = (r+1) / 2;
+        readIndex(indexRecord, index);
+        if(indexRecord.id < id);
+        else if (indexRecord.id > id) r = mid-1;
+        else {
+            data.seekg(indexRecord.pos);
+            if (readRecord(temp, data)) return temp;
+            else throw "Couldn't read record.";
+        }
+    } throw "Error finding ID.";
+}

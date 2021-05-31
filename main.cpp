@@ -14,6 +14,7 @@ int main() {
 
     ISAM isam;
     isam.loadData("stroke-data.csv");
-    isam.printAll();
+    //isam.printAll();
+    isam.search(49003).print();
     return 0;
 }

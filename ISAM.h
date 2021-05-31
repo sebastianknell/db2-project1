@@ -34,11 +34,12 @@ public:
     explicit ISAM(string dataFile = "ISAM-data.dat", int maxIndexSize = 1000): dataFile(move(dataFile)), maxIndexSize(maxIndexSize) {};
     void loadData(const string&);
     void printAll();
-    vector<Record> search(int);
+    Record search(int);
     vector<Record> rangeSearch(int, int);
     void insert(Record);
     void remove(int);
     void addIndexLevel();
+    static long getFileSize(ifstream&);
 };
 
 
