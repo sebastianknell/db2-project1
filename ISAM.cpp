@@ -95,3 +95,30 @@ Record ISAM::search(int id){
         }
     } throw "Error finding ID.";
 }
+
+vector<Record> ISAM::rangeSearch(int id1, int id2){
+    ifstream data(dataFile, ios::binary);
+    ifstream index(indexFile, ios::binary);
+    IndexRecord indexRecord;
+    Record temp;
+    vector<Record> result;
+    long recordSize = sizeof(indexRecord);
+    long r = getFileSize(index) / recordSize;
+    while(r >= 1) {
+        long mid = (r+1) / 2;
+        readIndex(indexRecord, index);
+        if(indexRecord.id < id1);
+        else if (indexRecord.id > id1) r = mid-1;
+        else{
+            data.seekg(indexRecord.pos);
+            while(indexRecord.id <= id2){
+                readIndex(indexRecord, index);
+                readRecord(temp, data);
+                result.push_back(temp);
+            }
+            if(!readRecord(temp, data))
+                throw "Couldn't read record.";
+            return result;
+        }
+    } throw "Error finding ID.";
+}

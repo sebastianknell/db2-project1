@@ -2,6 +2,7 @@
 #include "test/Tester.h"
 #include "SequentialFile.h"
 #include "ISAM.h"
+#include <iterator>
 
 using namespace std;
 
@@ -16,5 +17,12 @@ int main() {
     isam.loadData("stroke-data.csv");
     //isam.printAll();
     isam.search(49003).print();
+    cout << "\n";
+
+    vector<Record> v = isam.rangeSearch(49003, 49084);
+    for(auto & i : v){
+        i.print();
+    }
+
     return 0;
 }
