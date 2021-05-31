@@ -26,6 +26,7 @@ class ISAM {
     int maxIndexSize;
 
     bool readIndex(IndexRecord&, ifstream&);
+    bool readIndex(IndexRecord&, fstream&);
     bool writeIndex(IndexRecord&, ofstream&);
     bool readRecord(Record &, ifstream&);
     bool writeRecord(Record &, ofstream&, unsigned long&);
@@ -40,6 +41,8 @@ public:
     void remove(int);
     void addIndexLevel();
     static long getFileSize(ifstream&);
+    static long getFileSize(fstream&);
+    static long findPos(int, fstream&);
 };
 
 

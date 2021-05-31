@@ -16,10 +16,10 @@ int main() {
     ISAM isam;
     isam.loadData("stroke-data.csv");
     //isam.printAll();
-    isam.search(49003).print();
+    //isam.search(49003).print();
     cout << "\n";
 
-    vector<Record> v = isam.rangeSearch(49003, 49084);
+    vector<Record> v = isam.rangeSearch(49003, 49086);
     for(auto & i : v){
         i.print();
     }

@@ -48,6 +48,11 @@ bool ISAM::readIndex(IndexRecord &indexRecord, ifstream &stream) {
     return stream.good();
 }
 
+bool ISAM::readIndex(IndexRecord &indexRecord, fstream &stream) {
+    stream.read((char*)&indexRecord, sizeof(indexRecord));
+    return stream.good();
+}
+
 bool ISAM::writeIndex(IndexRecord &indexRecord, ofstream &stream) {
     stream.write((char*)&indexRecord, sizeof(indexRecord));
     return stream.good();
@@ -61,6 +66,24 @@ bool ISAM::readRecord(Record &record, ifstream &stream) {
     return success;
 }
 
+void ISAM::insert(Record record) {
+    ofstream data(dataFile, ios::out | ios::binary);
+    fstream index(indexFile, ios::out | ios::binary);
+    if(!data || !index) return;
+    Buffer buffer;
+    IndexRecord indexRecord;
+    indexRecord.id = record.get_key();
+    record.pack(buffer);
+    long indexSize = sizeof(indexRecord);
+    long r = getFileSize(index) / indexSize;
+    while (r >= 1) {
+        long mid = (r+1) / 2;
+        readIndex(indexRecord, index);
+        // compare file ID with inserting record ID.
+        // ...
+    }
+}
+
 bool ISAM::writeRecord(Record &record, ofstream &stream, unsigned long &offset) {
     Buffer buffer;
     record.pack(buffer);
@@ -69,6 +92,14 @@ bool ISAM::writeRecord(Record &record, ofstream &stream, unsigned long &offset) 
 }
 
  long ISAM::getFileSize(ifstream &stream) {
+    auto pos = stream.tellg();
+    stream.seekg(0, ios::end);
+    auto size = stream.tellg();
+    stream.seekg(pos);
+    return size;
+}
+
+long ISAM::getFileSize(fstream &stream) {
     auto pos = stream.tellg();
     stream.seekg(0, ios::end);
     auto size = stream.tellg();
@@ -91,9 +122,9 @@ Record ISAM::search(int id){
         else {
             data.seekg(indexRecord.pos);
             if (readRecord(temp, data)) return temp;
-            else throw "Couldn't read record.";
+            else throw logic_error("Couldn't read record.");
         }
-    } throw "Error finding ID.";
+    } throw out_of_range("Error finding ID.");
 }
 
 vector<Record> ISAM::rangeSearch(int id1, int id2){
@@ -117,8 +148,8 @@ vector<Record> ISAM::rangeSearch(int id1, int id2){
                 result.push_back(temp);
             }
             if(!readRecord(temp, data))
-                throw "Couldn't read record.";
+                throw logic_error("Couldn't read record.");
             return result;
         }
-    } throw "Error finding ID.";
+    } throw out_of_range("Error finding ID.");
 }
