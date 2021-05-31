@@ -9,6 +9,7 @@
 #include <utility>
 #include <vector>
 #include <string>
+#include <optional>
 #include "utils/rapidcsv.h"
 #include "utils/Buffer.h"
 //#include "FixedRecord.h"
@@ -17,7 +18,13 @@ using namespace std;
 
 enum file_type {
     data,
-    aux
+    aux,
+    none
+};
+
+struct position {
+    long pos{};
+    file_type fileType{};
 };
 
 struct FixedRecord {
@@ -34,7 +41,7 @@ struct FixedRecord {
     char smoking_status[16]{};
     char stroke[2]{};
     file_type next_file_type = file_type::data;
-    long next;
+    long next{};
 
     void load_data(vector<string> data) {
         assert(data.size() == 12);
@@ -57,7 +64,7 @@ struct FixedRecord {
 
 void print_record(FixedRecord &);
 static bool readRecord(FixedRecord &, fstream&);
-static bool writeRecord(FixedRecord &, fstream&, long&);
+static bool writeRecord(FixedRecord &, fstream&);
 
 class SequentialFile {
     string data_file;
@@ -68,7 +75,7 @@ public:
             max_aux_size) {};
     void load_data(const string&);
     void print_all();
-    FixedRecord search(int);
+    optional<FixedRecord> search(int);
     vector<FixedRecord> range_search(int, int);
     void insert(FixedRecord);
     void remove(int);
