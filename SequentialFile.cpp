@@ -16,9 +16,11 @@ static long find(int key, fstream &stream) {
     long record_size = sizeof(FixedRecord);
     long l = 0;
     long r = get_file_size(stream) / record_size;
+    long pos;
     FixedRecord temp;
     while (r >= l) {
         long m = (l + r) / 2;
+        pos = m * record_size;
         stream.seekg(m * record_size);
         readRecord(temp, stream);
         if (temp.get_key() < key) l = m+1;
@@ -27,7 +29,7 @@ static long find(int key, fstream &stream) {
             return m * record_size;
         }
     }
-    return -1;
+    return pos;
 }
 
 void print_record(FixedRecord &record) {
@@ -75,19 +77,33 @@ void SequentialFile::print_all() {
     in_file.close();
 }
 
-vector<FixedRecord> SequentialFile::search(int key) {
-    vector<FixedRecord> records;
-    fstream in_file(data_file, ios::in | ios::binary);
+FixedRecord SequentialFile::search(int key) {
+    fstream data(data_file, ios::in | ios::binary);
+    fstream aux(data_file, ios::in | ios::binary);
     FixedRecord temp;
-    long pos = find(key, in_file);
-    in_file.seekg(pos);
-    readRecord(temp, in_file);
-    while (temp.get_key() == key) {
-        records.push_back(temp);
-        readRecord(temp, in_file);
+    long pos = find(key, data);
+    data.seekg(pos);
+    readRecord(temp, data);
+    // Record may be in aux file
+    if (temp.get_key() == key) {
+        data.close();
+        aux.close();
+        return temp;
     }
-    in_file.close();
-    return records;
+    else if (temp.next_file_type == file_type::aux) {
+        while (temp.get_key() < key && temp.next_file_type == file_type::aux) {
+             aux.seekg(temp.next);
+             readRecord(temp, aux);
+        }
+        if (temp.get_key() == key) {
+            data.close();
+            aux.close();
+            return temp;
+        }
+    }
+    data.close();
+    aux.close();
+    throw runtime_error("Key not found");
 }
 
 vector<FixedRecord> SequentialFile::range_search(int begin_key, int end_key) {
@@ -95,7 +111,7 @@ vector<FixedRecord> SequentialFile::range_search(int begin_key, int end_key) {
 }
 
 void SequentialFile::insert(FixedRecord record) {
-    ofstream out_file(aux_file, ios::app | ios::binary);
+    fstream out_file(aux_file, ios::app | ios::binary);
     if (!out_file) return;
     // Search position
     // Insert
@@ -105,7 +121,10 @@ void SequentialFile::insert(FixedRecord record) {
 }
 
 void SequentialFile::remove(int key) {
-
+    try {
+        auto record = search(key);
+    } catch (runtime_error &error) {cout << error.what();};
+    
 }
 
 // Merge data file and aux file
@@ -117,7 +136,7 @@ void SequentialFile::merge_data() {
     do {
         readRecord(temp1, data);
         records.push_back(temp1);
-        if (temp1.f_type == file_type::aux) {
+        if (temp1.next_file_type == file_type::aux) {
             // Read all aux records in chain
             aux.seekg(temp1.next);
             FixedRecord temp2;
@@ -125,13 +144,13 @@ void SequentialFile::merge_data() {
                 readRecord(temp2, aux);
                 records.push_back(temp2);
                 aux.seekg(temp2.next);
-            } while (temp2.f_type == file_type::aux);
+            } while (temp2.next_file_type == file_type::aux);
         }
     } while (data);
 
     long offset = 0;
     for (auto record : records) {
-        record.f_type = file_type::data;
+        record.next_file_type = file_type::data;
         writeRecord(record, data, offset);
     }
 }

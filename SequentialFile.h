@@ -21,7 +21,7 @@ enum file_type {
 };
 
 struct FixedRecord {
-    char id[7]{};
+    char id[7]{}; // unique
     char gender[7]{};
     char age[4]{};
     char hypertension[2]{};
@@ -33,7 +33,7 @@ struct FixedRecord {
     char bmi[7]{};
     char smoking_status[16]{};
     char stroke[2]{};
-    file_type f_type = file_type::data;
+    file_type next_file_type = file_type::data;
     long next;
 
     void load_data(vector<string> data) {
@@ -68,7 +68,7 @@ public:
             max_aux_size) {};
     void load_data(const string&);
     void print_all();
-    vector<FixedRecord> search(int);
+    FixedRecord search(int);
     vector<FixedRecord> range_search(int, int);
     void insert(FixedRecord);
     void remove(int);
