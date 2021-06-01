@@ -31,9 +31,14 @@ int main() {
     record.data.push_back("0");
 
     //isam.insert(record);
-    isam.search(53106);
+    //isam.search(53106);
     //isam.printAll();
     //isam.printIndex();
+
+    vector<Record> range = isam.rangeSearch(53105, 53195);
+    for(auto & i : range) {
+        i.print();
+    }
 
     return 0;
 }

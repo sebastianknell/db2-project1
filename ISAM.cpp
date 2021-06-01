@@ -224,8 +224,11 @@ vector<Record> ISAM::rangeSearch(int id1, int id2){
         else if (indexRecord.id > id1) r = mid-1;
         else{
             data.seekg(indexRecord.pos);
-            while(indexRecord.id <= id2){
+            readRecord(temp,data);
+            result.push_back(temp);
+            while(indexRecord.id < id2){
                 readIndex(indexRecord, index);
+                data.seekg(indexRecord.pos);
                 readRecord(temp, data);
                 result.push_back(temp);
             }
@@ -235,5 +238,20 @@ vector<Record> ISAM::rangeSearch(int id1, int id2){
             index.close();
             return result;
         }
-    } throw out_of_range("Error finding ID.");
+    }
+    readIndex(indexRecord, index);
+    if(indexRecord.id == id1) {
+        data.seekg(indexRecord.pos);
+        readRecord(temp, data);
+        result.push_back(temp);
+        while(indexRecord.id < id2) {
+            readIndex(indexRecord, index);
+            data.seekg(indexRecord.pos);
+            readRecord(temp, data);
+            result.push_back(temp);
+        }
+        data.close();
+        index.close();
+        return result;
+    }else throw out_of_range("Error finding first ID.");
 }
