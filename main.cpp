@@ -15,7 +15,7 @@ int main() {
 
     FixedRecord record;
     vector<string> record_data;
-    record_data.push_back("53106");
+    record_data.push_back("2");
     record_data.push_back("Male");
     record_data.push_back("25");
     record_data.push_back("1");
@@ -30,8 +30,8 @@ int main() {
     record.load_data(record_data);
 //    if (!sequentialFile.insert(record)) cout << "false\n";
 
-//    auto result = sequentialFile.search(53106);
-//    if (result.has_value()) print_record(result.value());
-    sequentialFile.print_all();
+    auto result = sequentialFile.search(2);
+    if (result.has_value()) print_record(result.value());
+//    sequentialFile.print_all();
     return 0;
 }

@@ -45,15 +45,17 @@ static location_type find(int key, fstream &data, fstream &aux) {
             return {pos, file_type::data};
         }
     }
-    while (temp.get_key() < key) {
+    bool success = true;
+    while (temp.get_key() < key && success) {
         pos += record_size;
         data.seekg(pos);
-        readRecord(temp, data);
+        success = readRecord(temp, data);
     }
-    while (temp.get_key() > key) {
+    success = true;
+    while (temp.get_key() > key && success) {
         pos -= record_size;
         data.seekg(pos);
-        readRecord(temp, data);
+        success = readRecord(temp, data);
     }
     if (temp.next_file_type == file_type::aux) {
         bool success = true;
@@ -80,14 +82,17 @@ void print_record(FixedRecord &record) {
     cout << record.bmi << " ";
     cout << record.smoking_status << " ";
     cout << record.stroke << " ";
-//    cout << record.next;
+    cout << "| ";
+    cout << record.next_file_type << " ";
+    cout << record.next;
     cout << endl;
 }
 
 void SequentialFile::load_data(const string& from_filename) {
     FixedRecord temp;
     fstream data(data_file, ios::out | ios::binary);
-    if (!data) return;
+    fstream aux(aux_file, ios::out | ios::binary);
+    if (!data || !aux) return;
     rapidcsv::Document document(from_filename);
     auto len = document.GetRowCount();
     long offset = 0;
@@ -97,9 +102,11 @@ void SequentialFile::load_data(const string& from_filename) {
         temp.load_data(row);
         offset += sizeof(temp);
         temp.next_file_type = i == len-1 ? file_type::none : file_type::data;
+        temp.next = offset;
         writeRecord(temp, data);
     }
     data.close();
+    aux.close();
 }
 
 void SequentialFile::print_all() {
@@ -107,16 +114,13 @@ void SequentialFile::print_all() {
     fstream aux(aux_file, ios::in | ios::binary);
     if (!data || !aux) return;
     FixedRecord temp;
-    auto loc = find_first(data, aux);
-    (loc.fileType == file_type::data ? data : aux).seekg(loc.position);
-    readRecord(temp, loc.fileType == file_type::data ? data : aux);
+    readRecord(temp, data);
     print_record(temp);
     (temp.next_file_type == file_type::data ? data : aux).seekg(temp.next);
     while (readRecord(temp, temp.next_file_type == file_type::data ? data : aux)) {
         print_record(temp);
         (temp.next_file_type == file_type::data ? data : aux).seekg(temp.next);
     }
-
     data.close();
 }
 
@@ -154,6 +158,7 @@ vector<FixedRecord> SequentialFile::range_search(int begin_key, int end_key) {
 }
 
 bool SequentialFile::insert(FixedRecord record) {
+    if (record.get_key() <= 0) return false;
     fstream data(data_file, ios::out | ios::in | ios::binary);
     fstream aux(aux_file, ios::out | ios::in | ios::binary);
     if (!data || !aux) {
@@ -174,18 +179,18 @@ bool SequentialFile::insert(FixedRecord record) {
     // Update temp pointers and write
     temp.next_file_type = file_type::aux;
     temp.next = aux.tellg();
-    data.seekg(loc.position);
-    success = writeRecord(temp, data);
+    (loc.fileType == file_type::data ? data : aux).seekg(loc.position);
+    success = writeRecord(temp, (loc.fileType == file_type::data ? data : aux));
     if (!success) return false;
     // Write new record
     record.next_file_type = next_file_type;
     record.next = next;
-    success = writeRecord(record, aux);
+    success = writeRecord(record, aux); // where is aux?
     if (!success) return false;
-    data.close();
-    aux.close();
 
-    if (aux.tellp() >= max_aux_size) {
+    if (aux.tellg() >= max_aux_size * sizeof(FixedRecord)) {
+        data.close();
+        aux.close();
         merge_data();
     }
     return true;

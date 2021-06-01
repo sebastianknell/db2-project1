@@ -69,9 +69,9 @@ static bool writeRecord(FixedRecord &, fstream&);
 class SequentialFile {
     string data_file;
     string aux_file = "aux.dat";
-    int max_aux_size; // max size of aux.dat in bytes
+    int max_aux_size;
 public:
-    explicit SequentialFile(string data_file = "seq-file-data.dat", int max_aux_size = 10000):
+    explicit SequentialFile(string data_file = "seq-file-data.dat", int max_aux_size = 10):
         data_file(std::move(data_file)), max_aux_size(max_aux_size) {};
     void load_data(const string&);
     void print_all();
