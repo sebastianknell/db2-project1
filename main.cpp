@@ -14,15 +14,34 @@ int main() {
     sequentialFile.print_all();*/
 
     ISAM isam;
-    isam.loadData("stroke-data.csv");
+    //isam.loadData("stroke-data.csv");
     //isam.printAll();
     //isam.search(49003).print();
     cout << "\n";
 
-    vector<Record> v = isam.rangeSearch(49003, 49086);
+    /*vector<Record> v = isam.rangeSearch(49003, 49086);
     for(auto & i : v){
         i.print();
-    }
+    }*/
+
+    Record record;
+    record.data.push_back("53106");
+    record.data.push_back("Male");
+    record.data.push_back("25");
+    record.data.push_back("1");
+    record.data.push_back("0");
+    record.data.push_back("Yes");
+    record.data.push_back("Private");
+    record.data.push_back("Urban");
+    record.data.push_back("100.01");
+    record.data.push_back("30.8");
+    record.data.push_back("smokes");
+    record.data.push_back("0");
+
+
+    //isam.search(52688).print();
+    isam.insert(record);
+    //isam.printAll();
 
     return 0;
 }

@@ -8,6 +8,37 @@ static void printIndexRecord(IndexRecord &indexRecord) {
     cout << indexRecord.id << " " << indexRecord.pos << endl;
 }
 
+long ISAM::find(int id, fstream& stream){
+    long indexSize = sizeof(IndexRecord);
+    long l = 0;
+    long r = (getFileSize(stream) / indexSize) - 1;
+    long pos;
+    IndexRecord indexRecord;
+
+    while(r > l) {
+        long m = (r+l) / 2;
+        pos = m * indexSize;
+        stream.seekg(m*indexSize);
+        readIndex(indexRecord, stream);
+        if(indexRecord.id < id) l = m + 1;
+        else if(indexRecord.id > id) r = m-1;
+        else {
+            return pos;
+        }
+    }
+    while(indexRecord.id < id) {
+        pos += indexSize;
+        stream.seekg(pos);
+        readIndex(indexRecord, stream);
+    }
+    while (indexRecord.id > id) {
+        pos -= indexSize;
+        stream.seekg(pos);
+        readIndex(indexRecord, stream);
+    }
+    return pos;
+}
+
 void ISAM::loadData(const string& fromFilename) {
     Record temp;
     ofstream data(dataFile, ios::out | ios::binary);
@@ -58,6 +89,11 @@ bool ISAM::writeIndex(IndexRecord &indexRecord, ofstream &stream) {
     return stream.good();
 }
 
+bool ISAM::writeIndex(IndexRecord &indexRecord, fstream &stream) {
+    stream.write((char*)&indexRecord, sizeof(indexRecord));
+    return stream.good();
+}
+
 bool ISAM::readRecord(Record &record, ifstream &stream) {
     Buffer buffer;
     bool success = buffer.read(stream);
@@ -67,21 +103,17 @@ bool ISAM::readRecord(Record &record, ifstream &stream) {
 }
 
 void ISAM::insert(Record record) {
-    ofstream data(dataFile, ios::out | ios::binary);
-    fstream index(indexFile, ios::out | ios::binary);
+    ofstream data(dataFile, ios::app | ios::binary);
+    fstream index(indexFile, ios::in | ios::out | ios::binary);
     if(!data || !index) return;
-    Buffer buffer;
     IndexRecord indexRecord;
-    indexRecord.id = record.get_key();
-    record.pack(buffer);
-    long indexSize = sizeof(indexRecord);
-    long r = getFileSize(index) / indexSize;
-    while (r >= 1) {
-        long mid = (r+1) / 2;
-        readIndex(indexRecord, index);
-        // compare file ID with inserting record ID.
-        // ...
-    }
+    vector<IndexRecord> rewrite;
+
+    int id = record.get_key();
+    auto pos = find(id, index);
+    index.seekg(pos);
+    readIndex(indexRecord, index);
+    printIndexRecord(indexRecord);
 }
 
 bool ISAM::writeRecord(Record &record, ofstream &stream, unsigned long &offset) {
@@ -113,15 +145,22 @@ Record ISAM::search(int id){
     IndexRecord indexRecord;
     Record temp;
     long recordSize = sizeof(indexRecord);
-    long r = getFileSize(index) / recordSize;
-    while(r >= 1) {
-        long mid = (r+1) / 2;
+    long l = 0;
+    long r = (getFileSize(index) / recordSize) -1 ;
+    while(r > l) {
+        long mid = (r+l) / 2;
+        index.seekg(mid*recordSize);
         readIndex(indexRecord, index);
-        if(indexRecord.id < id);
+        if(indexRecord.id < id) l = mid+1;
         else if (indexRecord.id > id) r = mid-1;
         else {
             data.seekg(indexRecord.pos);
-            if (readRecord(temp, data)) return temp;
+            if (readRecord(temp, data)) {
+                printIndexRecord(indexRecord);
+                data.close();
+                index.close();
+                return temp;
+            }
             else throw logic_error("Couldn't read record.");
         }
     } throw out_of_range("Error finding ID.");

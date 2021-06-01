@@ -28,6 +28,7 @@ class ISAM {
     bool readIndex(IndexRecord&, ifstream&);
     bool readIndex(IndexRecord&, fstream&);
     bool writeIndex(IndexRecord&, ofstream&);
+    bool writeIndex(IndexRecord &indexRecord, fstream &stream);
     bool readRecord(Record &, ifstream&);
     bool writeRecord(Record &, ofstream&, unsigned long&);
 
@@ -43,6 +44,8 @@ public:
     static long getFileSize(ifstream&);
     static long getFileSize(fstream&);
     static long findPos(int, fstream&);
+
+    long find(int id, fstream &stream);
 };
 
 
