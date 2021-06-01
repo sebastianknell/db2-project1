@@ -23,29 +23,27 @@ struct IndexRecord {
 class ISAM {
     string dataFile;
     string indexFile = "index.dat";
-    int maxIndexSize;
+    //int maxIndexSize;
 
-    bool readIndex(IndexRecord&, ifstream&);
-    bool readIndex(IndexRecord&, fstream&);
-    bool writeIndex(IndexRecord&, ofstream&);
-    bool writeIndex(IndexRecord &indexRecord, fstream &stream);
-    bool readRecord(Record &, ifstream&);
-    bool writeRecord(Record &, ofstream&, unsigned long&);
+    static bool readIndex(IndexRecord&, ifstream&);
+    static bool readIndex(IndexRecord&, fstream&);
+    static bool writeIndex(IndexRecord&, ofstream&);
+    static bool writeIndex(IndexRecord &indexRecord, fstream &stream);
+    static bool readRecord(Record &, ifstream&);
+    static bool writeRecord(Record &, ofstream&, unsigned long&);
 
 public:
-    explicit ISAM(string dataFile = "ISAM-data.dat", int maxIndexSize = 1000): dataFile(move(dataFile)), maxIndexSize(maxIndexSize) {};
+    explicit ISAM(string dataFile = "ISAM-data.dat"): dataFile(move(dataFile))  {};
     void loadData(const string&);
     void printAll();
     Record search(int);
     vector<Record> rangeSearch(int, int);
     void insert(Record);
-    void remove(int);
-    void addIndexLevel();
-    static long getFileSize(ifstream&);
-    static long getFileSize(fstream&);
-    static long findPos(int, fstream&);
-
-    long find(int id, fstream &stream);
+    bool remove(int);
+    //void addIndexLevel();
+    static long long getFileSize(ifstream&);
+    static long long getFileSize(fstream&);
+    static long long find(int id, fstream &stream);
 
     void printIndex();
 };

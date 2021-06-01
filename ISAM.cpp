@@ -30,7 +30,7 @@ void ISAM::printAll() {
     }
 }
 
-long ISAM::getFileSize(ifstream &stream) {
+long long ISAM::getFileSize(ifstream &stream) {
     auto pos = stream.tellg();
     stream.seekg(0, ios::end);
     auto size = stream.tellg();
@@ -38,7 +38,7 @@ long ISAM::getFileSize(ifstream &stream) {
     return size;
 }
 
-long ISAM::getFileSize(fstream &stream) {
+long long ISAM::getFileSize(fstream &stream) {
     auto pos = stream.tellg();
     stream.seekg(0, ios::end);
     auto size = stream.tellg();
@@ -46,15 +46,15 @@ long ISAM::getFileSize(fstream &stream) {
     return size;
 }
 
-long ISAM::find(int id, fstream& stream){
+long long ISAM::find(int id, fstream& stream){
     long indexSize = sizeof(IndexRecord);
-    long l = 0;
-    long r = (getFileSize(stream) / indexSize) - 1;
-    long pos;
+    long long l = 0;
+    long long r = (getFileSize(stream) / indexSize) - 1;
+    long long pos;
     IndexRecord indexRecord;
 
     while(r > l) {
-        long m = (r+l) / 2;
+        long long m = (r+l) / 2;
         pos = m * indexSize;
         stream.seekg(m*indexSize);
         readIndex(indexRecord, stream);
@@ -175,10 +175,10 @@ Record ISAM::search(int id){
     IndexRecord indexRecord;
     Record temp;
     long indexSize = sizeof(indexRecord);
-    long l = 0;
-    long r = (getFileSize(index) / indexSize) -1 ;
+    long long l = 0;
+    long long r = (getFileSize(index) / indexSize) -1 ;
     while(r > l) {
-        long mid = (r+l) / 2;
+        long long mid = (r+l) / 2;
         index.seekg(mid*indexSize);
         readIndex(indexRecord, index);
         if(indexRecord.id < id) l = mid+1;
@@ -214,10 +214,10 @@ vector<Record> ISAM::rangeSearch(int id1, int id2){
     Record temp;
     vector<Record> result;
     long indexSize = sizeof(indexRecord);
-    long l = 0;
-    long r = (getFileSize(index) / indexSize) -1 ;
+    long long l = 0;
+    long long r = (getFileSize(index) / indexSize) -1 ;
     while(r > l) {
-        long mid = (r+l) / 2;
+        long long mid = (r+l) / 2;
         index.seekg(mid*indexSize);
         readIndex(indexRecord, index);
         if(indexRecord.id < id1) l = mid+1 ;
@@ -254,4 +254,63 @@ vector<Record> ISAM::rangeSearch(int id1, int id2){
         index.close();
         return result;
     }else throw out_of_range("Error finding first ID.");
+}
+
+bool ISAM::remove(int id) {
+    ifstream dataIn(dataFile, ios::binary);
+    fstream index(indexFile, ios::in | ios::out | ios::binary);
+    if(!dataIn || !index) return false;
+    IndexRecord indexRecord;
+    Record dataRecord;
+    vector<IndexRecord> indexBefore;
+    vector<IndexRecord> indexAfter;
+    vector<Record> dataBefore;
+    vector<Record> dataAfter;
+    unsigned long offset = 0;
+
+    if(search(id).get_key() != id) throw logic_error("Didn't find record");
+    auto pos = find(id, index);
+    index.seekg(0);
+    // save data before removed record
+    while(index.tellg() <= pos) {
+        readIndex(indexRecord, index);
+        indexBefore.push_back(indexRecord);
+        dataIn.seekg(indexRecord.pos);
+        readRecord(dataRecord, dataIn);
+        dataBefore.push_back(dataRecord);
+    }
+
+    readIndex(indexRecord, index);
+    printIndexRecord(indexRecord);
+
+    // save data after removed record
+    while(readIndex(indexRecord, index)) {
+        //indexAfter.push_back(indexRecord);
+        dataIn.seekg(indexRecord.pos);
+        readRecord(dataRecord, dataIn);
+        dataAfter.push_back(dataRecord);
+    }
+    dataIn.close();
+    index.close();
+    ofstream dataOut(dataFile, ios::out | ios::trunc | ios::binary);
+    ofstream indexOut(indexFile, ios::out | ios::trunc | ios::binary);
+    for(auto & i : indexBefore) {
+        writeIndex(i, indexOut);
+    }
+    for(auto & d : dataBefore) {
+        writeRecord(d, dataOut, offset);
+    }
+    for(auto & d : dataAfter) {
+        indexRecord.pos = dataOut.tellp();
+        indexRecord.id = d.get_key();
+        indexAfter.push_back(indexRecord);
+        writeRecord(d, dataOut, offset);
+    }
+    for(auto & i : indexAfter) {
+        writeIndex(i, indexOut);
+    }
+    dataOut.close();
+    indexOut.close();
+
+    return true;
 }
