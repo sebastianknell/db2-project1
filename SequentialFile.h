@@ -22,8 +22,8 @@ enum file_type {
     none
 };
 
-struct position {
-    long pos{};
+struct location_type {
+    long position{};
     file_type fileType{};
 };
 
@@ -71,14 +71,14 @@ class SequentialFile {
     string aux_file = "aux.dat";
     int max_aux_size; // max size of aux.dat in bytes
 public:
-    explicit SequentialFile(string data_file = "seq-file-data.dat", int max_aux_size = 1000): data_file(std::move(data_file)), max_aux_size(
-            max_aux_size) {};
+    explicit SequentialFile(string data_file = "seq-file-data.dat", int max_aux_size = 10000):
+        data_file(std::move(data_file)), max_aux_size(max_aux_size) {};
     void load_data(const string&);
     void print_all();
     optional<FixedRecord> search(int);
     vector<FixedRecord> range_search(int, int);
-    void insert(FixedRecord);
-    void remove(int);
+    bool insert(FixedRecord);
+    bool remove(int);
     void merge_data();
 };
 
