@@ -174,12 +174,12 @@ Record ISAM::search(int id){
     ifstream index(indexFile, ios::binary);
     IndexRecord indexRecord;
     Record temp;
-    long recordSize = sizeof(indexRecord);
+    long indexSize = sizeof(indexRecord);
     long l = 0;
-    long r = (getFileSize(index) / recordSize) -1 ;
+    long r = (getFileSize(index) / indexSize) -1 ;
     while(r > l) {
         long mid = (r+l) / 2;
-        index.seekg(mid*recordSize);
+        index.seekg(mid*indexSize);
         readIndex(indexRecord, index);
         if(indexRecord.id < id) l = mid+1;
         else if (indexRecord.id > id) r = mid-1;
@@ -213,12 +213,14 @@ vector<Record> ISAM::rangeSearch(int id1, int id2){
     IndexRecord indexRecord;
     Record temp;
     vector<Record> result;
-    long recordSize = sizeof(indexRecord);
-    long r = getFileSize(index) / recordSize;
-    while(r >= 1) {
-        long mid = (r+1) / 2;
+    long indexSize = sizeof(indexRecord);
+    long l = 0;
+    long r = (getFileSize(index) / indexSize) -1 ;
+    while(r > l) {
+        long mid = (r+l) / 2;
+        index.seekg(mid*indexSize);
         readIndex(indexRecord, index);
-        if(indexRecord.id < id1);
+        if(indexRecord.id < id1) l = mid+1 ;
         else if (indexRecord.id > id1) r = mid-1;
         else{
             data.seekg(indexRecord.pos);
@@ -229,6 +231,8 @@ vector<Record> ISAM::rangeSearch(int id1, int id2){
             }
             if(!readRecord(temp, data))
                 throw logic_error("Couldn't read record.");
+            data.close();
+            index.close();
             return result;
         }
     } throw out_of_range("Error finding ID.");
