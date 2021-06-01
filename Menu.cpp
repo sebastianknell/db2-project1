@@ -11,10 +11,11 @@ void Menu::execute() {
 
 void Menu::select_option() {
     cout << "Seleccione una opción. Ingrese QUIT para terminar" << endl;
-    cout << "1. Buscar un registro" << endl;
-    cout << "2. Búsqueda por rango" << endl;
-    cout << "3. Insertar un registro" << endl;
-    cout << "4. Remover un registro" << endl;
+    cout << "1. Imprimir todos los registros" << endl;
+    cout << "2. Buscar un registro" << endl;
+    cout << "3. Búsqueda por rango" << endl;
+    cout << "4. Insertar un registro" << endl;
+    cout << "5. Remover un registro" << endl;
     string input;
     int option;
     do {
@@ -24,15 +25,19 @@ void Menu::select_option() {
         if (option < 1 || option > 4) cout << "Opción inválida" << endl;
         switch (option) {
             case 1:
-                search();
+                if (workingClass == sequential)
+                    sequentialFile.print_all();
                 break;
             case 2:
-                range_search();
+                search();
                 break;
             case 3:
-                insert();
+                range_search();
                 break;
             case 4:
+                insert();
+                break;
+            case 5:
                 remove();
                 break;
             default:
@@ -85,5 +90,12 @@ void Menu::insert() {
 }
 
 void Menu::remove() {
-
+    int id;
+    cout << "Ingrese el ID que desea remover: ";
+    cin >> id;
+    if (workingClass == sequential) {
+        bool success = sequentialFile.remove(id);
+        if (success) cout << "Registro eliminado exitosamente" << endl;
+        else cout << "No se encontro ningun registro con el ID" << id << endl;
+    }
 }

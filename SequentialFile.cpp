@@ -12,6 +12,22 @@ static long get_file_size(fstream &stream) {
     return size;
 }
 
+static location_type find_first(fstream &data, fstream &aux) {
+    auto data_pos = data.tellg();
+    auto aux_pos = aux.tellg();
+    data.seekg(ios::beg);
+    aux.seekg(ios::beg);
+    FixedRecord temp1;
+    FixedRecord temp2;
+    readRecord(temp1, data);
+    readRecord(temp2, aux);
+    assert(data.good() && aux.good());
+    data.seekg(data_pos);
+    aux.seekg(aux_pos);
+    if (temp1.get_key() < temp2.get_key()) return {0, file_type::data};
+    else return {0, file_type::aux};
+}
+
 static location_type find(int key, fstream &data, fstream &aux) {
     long record_size = sizeof(FixedRecord);
     long l = 0;
@@ -64,7 +80,7 @@ void print_record(FixedRecord &record) {
     cout << record.bmi << " ";
     cout << record.smoking_status << " ";
     cout << record.stroke << " ";
-    cout << record.next;
+//    cout << record.next;
     cout << endl;
 }
 
@@ -88,15 +104,26 @@ void SequentialFile::load_data(const string& from_filename) {
 
 void SequentialFile::print_all() {
     fstream data(data_file, ios::in | ios::binary);
-    if (!data) return;
+    fstream aux(aux_file, ios::in | ios::binary);
+    if (!data || !aux) return;
     FixedRecord temp;
-    while (readRecord(temp, data)) print_record(temp);
+    auto loc = find_first(data, aux);
+    (loc.fileType == file_type::data ? data : aux).seekg(loc.position);
+    readRecord(temp, loc.fileType == file_type::data ? data : aux);
+    print_record(temp);
+    (temp.next_file_type == file_type::data ? data : aux).seekg(temp.next);
+    while (readRecord(temp, temp.next_file_type == file_type::data ? data : aux)) {
+        print_record(temp);
+        (temp.next_file_type == file_type::data ? data : aux).seekg(temp.next);
+    }
+
     data.close();
 }
 
 optional<FixedRecord> SequentialFile::search(int key) {
     fstream data(data_file, ios::in | ios::binary);
     fstream aux(aux_file, ios::in | ios::binary);
+    if (!data || !aux) return nullopt;
     FixedRecord temp;
     auto loc = find(key, data, aux);
     (loc.fileType == file_type::data ? data : aux).seekg(loc.position);

@@ -28,10 +28,10 @@ int main() {
     record_data.push_back("smokes");
     record_data.push_back("0");
     record.load_data(record_data);
-    if (!sequentialFile.insert(record)) cout << "false\n";
+//    if (!sequentialFile.insert(record)) cout << "false\n";
 
-    auto result = sequentialFile.search(53106);
-    if (result.has_value()) print_record(result.value());
-//    sequentialFile.print_all();
+//    auto result = sequentialFile.search(53106);
+//    if (result.has_value()) print_record(result.value());
+    sequentialFile.print_all();
     return 0;
 }

@@ -16,16 +16,16 @@ enum class_type {
 };
 
 class Menu {
-    static class_type workingClass;
-    static SequentialFile sequentialFile;
-    static void select_working_file();
-    static void select_option();
-    static void search();
-    static void range_search();
-    static void insert();
-    static void remove();
+    class_type workingClass;
+    SequentialFile sequentialFile;
+    void select_working_file();
+    void select_option();
+    void search();
+    void range_search();
+    void insert();
+    void remove();
 public:
-    static void execute();
+    void execute();
 };
 
 
