@@ -17,7 +17,7 @@ using namespace std;
 
 struct IndexRecord {
     int id{};
-    long pos{};
+    long long pos{};
 };
 
 class ISAM {
@@ -46,6 +46,8 @@ public:
     static long findPos(int, fstream&);
 
     long find(int id, fstream &stream);
+
+    void printIndex();
 };
 
 

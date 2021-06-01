@@ -60,6 +60,14 @@ void ISAM::loadData(const string& fromFilename) {
     }
 }
 
+void ISAM::printIndex() {
+    ifstream index(indexFile, ios::binary);
+    IndexRecord indexRecord;
+    while(readIndex(indexRecord, index)) {
+        printIndexRecord(indexRecord);
+    }
+}
+
 void ISAM::printAll() {
     ifstream data(dataFile, ios::binary);
     ifstream index(indexFile, ios::binary);
@@ -90,7 +98,7 @@ bool ISAM::writeIndex(IndexRecord &indexRecord, ofstream &stream) {
 }
 
 bool ISAM::writeIndex(IndexRecord &indexRecord, fstream &stream) {
-    stream.write((char*)&indexRecord, sizeof(indexRecord));
+    stream.write((char*)&indexRecord, sizeof(IndexRecord));
     return stream.good();
 }
 
@@ -103,17 +111,39 @@ bool ISAM::readRecord(Record &record, ifstream &stream) {
 }
 
 void ISAM::insert(Record record) {
-    ofstream data(dataFile, ios::app | ios::binary);
+    ofstream data(dataFile, ios::ate | ios::app | ios::binary);
     fstream index(indexFile, ios::in | ios::out | ios::binary);
     if(!data || !index) return;
     IndexRecord indexRecord;
     vector<IndexRecord> rewrite;
-
+    unsigned long offset = 0;
     int id = record.get_key();
+
     auto pos = find(id, index);
-    index.seekg(pos);
-    readIndex(indexRecord, index);
-    printIndexRecord(indexRecord);
+    index.seekg(0);
+    while(index.tellg() <= pos) {
+        readIndex(indexRecord, index);
+        rewrite.push_back(indexRecord);
+    }
+
+    index.seekg(pos + sizeof(IndexRecord)); // located at insertion pos
+
+    // iterate indexes
+    indexRecord.pos = data.tellp();
+    indexRecord.id = id;
+    rewrite.push_back(indexRecord);
+    while(readIndex(indexRecord, index)) {
+        rewrite.push_back(indexRecord); // add to vector
+    }
+
+    writeRecord(record, data, offset);
+
+    data.close();
+    index.close();
+    ofstream indexOut(indexFile, ios::out | ios::trunc | ios::binary);
+    for(auto & i : rewrite) {
+        writeIndex(i, indexOut);
+    }
 }
 
 bool ISAM::writeRecord(Record &record, ofstream &stream, unsigned long &offset) {
@@ -163,7 +193,18 @@ Record ISAM::search(int id){
             }
             else throw logic_error("Couldn't read record.");
         }
-    } throw out_of_range("Error finding ID.");
+    }
+    readIndex(indexRecord, index);
+    if(indexRecord.id == id) {
+        data.seekg(indexRecord.pos);
+        if(readRecord(temp, data)) {
+            printIndexRecord(indexRecord);
+            data.close();
+            index.close();
+            return temp;
+        }
+    } else throw logic_error("Error reading record");
+    throw out_of_range("Error finding ID.");
 }
 
 vector<Record> ISAM::rangeSearch(int id1, int id2){

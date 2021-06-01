@@ -15,14 +15,6 @@ int main() {
 
     ISAM isam;
     //isam.loadData("stroke-data.csv");
-    //isam.printAll();
-    //isam.search(49003).print();
-    cout << "\n";
-
-    /*vector<Record> v = isam.rangeSearch(49003, 49086);
-    for(auto & i : v){
-        i.print();
-    }*/
 
     Record record;
     record.data.push_back("53106");
@@ -38,10 +30,10 @@ int main() {
     record.data.push_back("smokes");
     record.data.push_back("0");
 
-
-    //isam.search(52688).print();
-    isam.insert(record);
+    //isam.insert(record);
+    isam.search(53106);
     //isam.printAll();
+    //isam.printIndex();
 
     return 0;
 }
