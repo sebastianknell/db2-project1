@@ -8,6 +8,44 @@ static void printIndexRecord(IndexRecord &indexRecord) {
     cout << indexRecord.id << " " << indexRecord.pos << endl;
 }
 
+void ISAM::printIndex() {
+    ifstream index(indexFile, ios::binary);
+    IndexRecord indexRecord;
+    while(readIndex(indexRecord, index)) {
+        printIndexRecord(indexRecord);
+    }
+}
+
+void ISAM::printAll() {
+    ifstream data(dataFile, ios::binary);
+    ifstream index(indexFile, ios::binary);
+    IndexRecord indexRecord;
+    Record record;
+    while (readIndex(indexRecord, index)) {
+        data.seekg(indexRecord.pos);
+        bool success = readRecord(record, data);
+        if (!success) break; // TODO change
+        printIndexRecord(indexRecord);
+        record.print();
+    }
+}
+
+long ISAM::getFileSize(ifstream &stream) {
+    auto pos = stream.tellg();
+    stream.seekg(0, ios::end);
+    auto size = stream.tellg();
+    stream.seekg(pos);
+    return size;
+}
+
+long ISAM::getFileSize(fstream &stream) {
+    auto pos = stream.tellg();
+    stream.seekg(0, ios::end);
+    auto size = stream.tellg();
+    stream.seekg(pos);
+    return size;
+}
+
 long ISAM::find(int id, fstream& stream){
     long indexSize = sizeof(IndexRecord);
     long l = 0;
@@ -39,49 +77,6 @@ long ISAM::find(int id, fstream& stream){
     return pos;
 }
 
-void ISAM::loadData(const string& fromFilename) {
-    Record temp;
-    ofstream data(dataFile, ios::out | ios::binary);
-    ofstream index(indexFile, ios::out | ios::binary);
-    if(!data) return;
-    rapidcsv::Document document(fromFilename);
-    auto len = document.GetRowCount();
-    unsigned long offset = 0;
-    IndexRecord indexRecord;
-
-    for(int i = 0 ; i < len ; i++)
-    {
-        vector<string> row = document.GetRow<string>(i);
-        temp.load_data(row);
-        indexRecord.pos = data.tellp();
-        writeRecord(temp, data, offset);
-        indexRecord.id = temp.get_key();
-        index.write((char*)&indexRecord, sizeof(indexRecord));
-    }
-}
-
-void ISAM::printIndex() {
-    ifstream index(indexFile, ios::binary);
-    IndexRecord indexRecord;
-    while(readIndex(indexRecord, index)) {
-        printIndexRecord(indexRecord);
-    }
-}
-
-void ISAM::printAll() {
-    ifstream data(dataFile, ios::binary);
-    ifstream index(indexFile, ios::binary);
-    IndexRecord indexRecord;
-    Record record;
-    while (readIndex(indexRecord, index)) {
-        data.seekg(indexRecord.pos);
-        bool success = readRecord(record, data);
-        if (!success) break; // TODO change
-        printIndexRecord(indexRecord);
-        record.print();
-    }
-}
-
 bool ISAM::readIndex(IndexRecord &indexRecord, ifstream &stream) {
     stream.read((char*)&indexRecord, sizeof(indexRecord));
     return stream.good();
@@ -108,6 +103,34 @@ bool ISAM::readRecord(Record &record, ifstream &stream) {
     if (!success) return false;
     record.unpack(buffer);
     return success;
+}
+
+bool ISAM::writeRecord(Record &record, ofstream &stream, unsigned long &offset) {
+    Buffer buffer;
+    record.pack(buffer);
+    bool success = buffer.write(stream);
+    return success;
+}
+
+void ISAM::loadData(const string& fromFilename) {
+    Record temp;
+    ofstream data(dataFile, ios::out | ios::binary);
+    ofstream index(indexFile, ios::out | ios::binary);
+    if(!data) return;
+    rapidcsv::Document document(fromFilename);
+    auto len = document.GetRowCount();
+    unsigned long offset = 0;
+    IndexRecord indexRecord;
+
+    for(int i = 0 ; i < len ; i++)
+    {
+        vector<string> row = document.GetRow<string>(i);
+        temp.load_data(row);
+        indexRecord.pos = data.tellp();
+        writeRecord(temp, data, offset);
+        indexRecord.id = temp.get_key();
+        index.write((char*)&indexRecord, sizeof(indexRecord));
+    }
 }
 
 void ISAM::insert(Record record) {
@@ -144,29 +167,6 @@ void ISAM::insert(Record record) {
     for(auto & i : rewrite) {
         writeIndex(i, indexOut);
     }
-}
-
-bool ISAM::writeRecord(Record &record, ofstream &stream, unsigned long &offset) {
-    Buffer buffer;
-    record.pack(buffer);
-    bool success = buffer.write(stream);
-    return success;
-}
-
- long ISAM::getFileSize(ifstream &stream) {
-    auto pos = stream.tellg();
-    stream.seekg(0, ios::end);
-    auto size = stream.tellg();
-    stream.seekg(pos);
-    return size;
-}
-
-long ISAM::getFileSize(fstream &stream) {
-    auto pos = stream.tellg();
-    stream.seekg(0, ios::end);
-    auto size = stream.tellg();
-    stream.seekg(pos);
-    return size;
 }
 
 Record ISAM::search(int id){
