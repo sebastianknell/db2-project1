@@ -80,7 +80,7 @@ void SequentialFile::load_data(const string& from_filename) {
         // Save row to record and write to file
         temp.load_data(row);
         offset += sizeof(temp);
-        temp.next = i == len-1 ? -1 : offset;
+        temp.next_file_type = i == len-1 ? file_type::none : file_type::data;
         writeRecord(temp, data);
     }
     data.close();
@@ -111,10 +111,19 @@ vector<FixedRecord> SequentialFile::range_search(int begin_key, int end_key) {
     fstream data(data_file, ios::in | ios::binary);
     fstream aux(data_file, ios::in | ios::binary);
     vector<FixedRecord> records;
-    auto pos = find(begin_key, data, aux);
+
+    auto loc = find(begin_key, data, aux);
     FixedRecord temp;
-    readRecord(temp, temp.next_file_type == file_type::data ? data : aux);
-    
+    (loc.fileType == file_type::data ? data : aux).seekg(loc.position);
+    readRecord(temp, loc.fileType == file_type::data ? data : aux);
+    records.push_back(temp);
+
+    while (temp.get_key() < end_key) {
+        (temp.next_file_type == file_type::data ? data : aux).seekg(temp.next);
+        readRecord(temp, temp.next_file_type == file_type::data ? data : aux);
+        records.push_back(temp);
+    }
+    return records;
 }
 
 bool SequentialFile::insert(FixedRecord record) {
@@ -127,7 +136,8 @@ bool SequentialFile::insert(FixedRecord record) {
     auto loc = find(record.get_key(), data, aux);
     (loc.fileType == file_type::data ? data : aux).seekg(loc.position);
     FixedRecord temp;
-    readRecord(temp, loc.fileType == file_type::data ? data : aux);
+    bool success = readRecord(temp, loc.fileType == file_type::data ? data : aux);
+    if (!success) return false;
     // Return if key is already in file
     if (temp.get_key() == record.get_key()) return false;
     // Insert
@@ -138,12 +148,13 @@ bool SequentialFile::insert(FixedRecord record) {
     temp.next_file_type = file_type::aux;
     temp.next = aux.tellg();
     data.seekg(loc.position);
-    writeRecord(temp, data); // TODO validate
+    success = writeRecord(temp, data);
+    if (!success) return false;
     // Write new record
     record.next_file_type = next_file_type;
     record.next = next;
-    writeRecord(record, aux); // TODO validate
-
+    success = writeRecord(record, aux);
+    if (!success) return false;
     data.close();
     aux.close();
 
@@ -154,8 +165,38 @@ bool SequentialFile::insert(FixedRecord record) {
 }
 
 bool SequentialFile::remove(int key) {
+    fstream data(data_file, ios::out | ios::in | ios::binary);
+    fstream aux(aux_file, ios::out | ios::in | ios::binary);
+    // Search location
+    auto loc = find(key, data, aux);
+    (loc.fileType == file_type::data ? data : aux).seekg(loc.position);
+    FixedRecord temp;
+    bool success = readRecord(temp, loc.fileType == file_type::data ? data : aux);
+    if (!success) return false;
+    // Return if key doesn't exists
+    if (temp.get_key() != key) return false;
+    // Mark record as removed
+    auto next_file_type = temp.next_file_type;
+    auto next = temp.next;
 
-    
+    // TODO assuming the record before is in the same file. change
+    (loc.fileType == file_type::data ? data : aux).seekg(loc.position - sizeof(FixedRecord));
+    success = readRecord(temp, loc.fileType == file_type::data ? data : aux);
+    if (!success) return false;
+
+    temp.next_file_type = next_file_type;
+    temp.next = next;
+    (loc.fileType == file_type::data ? data : aux).seekg(loc.position - sizeof(FixedRecord));
+    success = writeRecord(temp, loc.fileType == file_type::data ? data : aux);
+    if (!success) return false;
+
+    success = readRecord(temp, loc.fileType == file_type::data ? data : aux);
+    if (!success) return false;
+    temp.next = -1;
+    (loc.fileType == file_type::data ? data : aux).seekg(loc.position);
+    success = writeRecord(temp, loc.fileType == file_type::data ? data : aux);
+    if (!success) return false;
+    return true;
 }
 
 // Merge data file and aux file
@@ -164,6 +205,7 @@ void SequentialFile::merge_data() {
     fstream aux(aux_file, ios::binary);
     FixedRecord temp1;
     vector<FixedRecord> records;
+    // TODO what if record with least key is in aux file?
     do {
         readRecord(temp1, data);
         records.push_back(temp1);
@@ -177,7 +219,7 @@ void SequentialFile::merge_data() {
                 aux.seekg(temp2.next);
             } while (temp2.next_file_type == file_type::aux);
         }
-    } while (data);
+    } while (temp1.next_file_type != file_type::none);
 
     long offset = 0;
     for (auto record : records) {
