@@ -22,7 +22,7 @@ void Menu::select_option() {
         cin >> input;
         if (input == "QUIT") return;
         option = stoi(input);
-        if (option < 1 || option > 4) cout << "Opción inválida" << endl;
+        if (option < 1 || option > 5) cout << "Opción inválida" << endl;
         switch (option) {
             case 1:
                 if (workingClass == sequential)
@@ -104,27 +104,33 @@ void Menu::insert() {
     do {
         cout << "Ingrese un ID para el registro a instertar: ";
         cin >> input;
-        if(input <= 0) cout << "ID ingresado no es valido.";
+        if(input <= 0) cout << "ID ingresado no es valido";
     } while(input <= 0);
+    vector<string> data;
+    data.emplace_back(to_string(input));
+    data.emplace_back("Male");
+    data.emplace_back("25");
+    data.emplace_back("1");
+    data.emplace_back("0");
+    data.emplace_back("Yes");
+    data.emplace_back("Private");
+    data.emplace_back("Urban");
+    data.emplace_back("100.01");
+    data.emplace_back("30.8");
+    data.emplace_back("smokes");
+    data.emplace_back("0");
     if(workingClass == sequential) {
-
+        FixedRecord fixedRecord;
+        fixedRecord.load_data(data);
+        if (sequentialFile.insert(fixedRecord))
+            cout << "Registro insertado correctamente" << endl;
+        else cout << "No se pudo insertar registro" << endl;
     }
     else if (workingClass == isam) {
         Record record;
-        record.data.emplace_back(to_string(input));
-        record.data.emplace_back("Male");
-        record.data.emplace_back("25");
-        record.data.emplace_back("1");
-        record.data.emplace_back("0");
-        record.data.emplace_back("Yes");
-        record.data.emplace_back("Private");
-        record.data.emplace_back("Urban");
-        record.data.emplace_back("100.01");
-        record.data.emplace_back("30.8");
-        record.data.emplace_back("smokes");
-        record.data.emplace_back("0");
+        record.load_data(data);
         isamFile.insert(record);
-        cout << "Registro insertado correctamente." << endl;
+        cout << "Registro insertado correctamente" << endl;
     }
 }
 
