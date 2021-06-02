@@ -259,13 +259,18 @@ void SequentialFile::merge_data() {
     aux.close();
 }
 
+int countRead=0;
+int countWrite=0;
+
 bool readRecord(FixedRecord &record, fstream &stream) {
     stream.read((char*)&record, sizeof(record));
     bool success = stream.good();
+    countRead++;
     return success;
 }
 
 bool writeRecord(FixedRecord &record, fstream &stream) {
     stream.write((char*)&record, sizeof(record));
+    countWrite++;
     return stream.good();
 }
