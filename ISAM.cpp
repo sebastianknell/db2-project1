@@ -24,8 +24,7 @@ void ISAM::printAll() {
     while (readIndex(indexRecord, index)) {
         data.seekg(indexRecord.pos);
         bool success = readRecord(record, data);
-        if (!success) break; // TODO change
-        printIndexRecord(indexRecord);
+        if (!success) break;
         record.print();
     }
 }
@@ -169,7 +168,7 @@ void ISAM::insert(Record record) {
     }
 }
 
-Record ISAM::search(int id){
+optional<Record> ISAM::search(int id){
     ifstream data(dataFile, ios::binary);
     ifstream index(indexFile, ios::binary);
     IndexRecord indexRecord;
@@ -186,12 +185,11 @@ Record ISAM::search(int id){
         else {
             data.seekg(indexRecord.pos);
             if (readRecord(temp, data)) {
-                printIndexRecord(indexRecord);
                 data.close();
                 index.close();
                 return temp;
             }
-            else throw logic_error("Couldn't read record.");
+            else return nullopt;
         }
     }
     readIndex(indexRecord, index);
@@ -203,8 +201,8 @@ Record ISAM::search(int id){
             index.close();
             return temp;
         }
-    } else throw logic_error("Error reading record");
-    throw out_of_range("Error finding ID.");
+    } else return nullopt;
+    return nullopt;
 }
 
 vector<Record> ISAM::rangeSearch(int id1, int id2){
@@ -232,8 +230,6 @@ vector<Record> ISAM::rangeSearch(int id1, int id2){
                 readRecord(temp, data);
                 result.push_back(temp);
             }
-            if(!readRecord(temp, data))
-                throw logic_error("Couldn't read record.");
             data.close();
             index.close();
             return result;
@@ -253,7 +249,7 @@ vector<Record> ISAM::rangeSearch(int id1, int id2){
         data.close();
         index.close();
         return result;
-    }else throw out_of_range("Error finding first ID.");
+    }return result;
 }
 
 bool ISAM::remove(int id) {
@@ -267,7 +263,7 @@ bool ISAM::remove(int id) {
     //vector<long> newPositions;
     unsigned long offset = 0;
 
-    if(search(id).get_key() != id) throw logic_error("Didn't find record");
+    if(!search(id).has_value()) return false;
     auto pos = find(id, index);
     index.seekg(0);
     // save data before removed record
@@ -279,7 +275,6 @@ bool ISAM::remove(int id) {
         dataRewrite.push_back(dataRecord);
     }
 
-    printIndexRecord(indexRecord); // should be removed record
     readIndex(indexRecord, index);
 
     // save data after removed record
@@ -299,13 +294,7 @@ bool ISAM::remove(int id) {
         writeRecord(d, dataOut, offset);
         indexOut.write((char*)&indexRecord, sizeof(indexRecord));
     }
-    /*for(auto & i : indexRewrite) {
-        i.pos = newPositions[count];
-        writeIndex(i, indexOut);
-    }*/
-
     dataOut.close();
     indexOut.close();
-
     return true;
 }

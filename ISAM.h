@@ -9,6 +9,7 @@
 #include <utility>
 #include <vector>
 #include <string>
+#include <optional>
 #include "utils/rapidcsv.h"
 #include "utils/Buffer.h"
 #include "Record.h"
@@ -36,7 +37,7 @@ public:
     explicit ISAM(string dataFile = "ISAM-data.dat"): dataFile(move(dataFile))  {};
     void loadData(const string&);
     void printAll();
-    Record search(int);
+    optional<Record> search(int);
     vector<Record> rangeSearch(int, int);
     void insert(Record);
     bool remove(int);

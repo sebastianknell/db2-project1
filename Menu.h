@@ -9,6 +9,7 @@
 #include <vector>
 #include <optional>
 #include "SequentialFile.h"
+#include "ISAM.h"
 
 enum class_type {
     sequential,
@@ -18,6 +19,7 @@ enum class_type {
 class Menu {
     class_type workingClass;
     SequentialFile sequentialFile;
+    ISAM isamFile;
     void select_working_file();
     void select_option();
     void search();

@@ -10,15 +10,15 @@ void Menu::execute() {
 }
 
 void Menu::select_option() {
-    cout << "Seleccione una opción. Ingrese QUIT para terminar" << endl;
-    cout << "1. Imprimir todos los registros" << endl;
-    cout << "2. Buscar un registro" << endl;
-    cout << "3. Búsqueda por rango" << endl;
-    cout << "4. Insertar un registro" << endl;
-    cout << "5. Remover un registro" << endl;
     string input;
     int option;
     do {
+        cout << "Seleccione una opción. Ingrese QUIT para terminar" << endl;
+        cout << "1. Imprimir todos los registros" << endl;
+        cout << "2. Buscar un registro" << endl;
+        cout << "3. Búsqueda por rango" << endl;
+        cout << "4. Insertar un registro" << endl;
+        cout << "5. Remover un registro" << endl;
         cin >> input;
         if (input == "QUIT") return;
         option = stoi(input);
@@ -27,6 +27,8 @@ void Menu::select_option() {
             case 1:
                 if (workingClass == sequential)
                     sequentialFile.print_all();
+                else if(workingClass == isam)
+                    isamFile.printAll();
                 break;
             case 2:
                 search();
@@ -43,7 +45,7 @@ void Menu::select_option() {
             default:
                 cout << "Ocurrió un error" << endl;
         }
-    } while (option < 1 || option > 4);
+    } while (input != "QUIT");
 }
 
 void Menu::select_working_file() {
@@ -66,14 +68,19 @@ void Menu::search() {
     if (workingClass == sequential) {
         auto fixedRecord = sequentialFile.search(id);
         if (fixedRecord.has_value()) print_record(fixedRecord.value());
-        else cout << "No se encontro ningun registro con el ID" << id << endl;
+        else cout << "No se encontro ningun registro con el ID: " << id << endl;
+    }
+    else if(workingClass == isam) {
+        auto dataRecord = isamFile.search(id);
+        if(dataRecord.has_value()) dataRecord->print();
+        else cout << "No se encontro ningun registro con el ID: " << id << endl;
     }
 }
 
 void Menu::range_search() {
     int id1;
     int id2;
-    cout << "Ingrese un rango de ID's en el que desea buscar";
+    cout << "Ingrese un rango de ID's en el que desea buscar" << endl;
     cout << "Inicio: "; cin >> id1;
     cout << "Fin: "; cin >> id2;
     if (workingClass == sequential) {
@@ -83,10 +90,42 @@ void Menu::range_search() {
         }
         else cout << "No se encontró ningún registro en el rango dado" << endl;
     }
+    else if(workingClass == isam) {
+        auto records = isamFile.rangeSearch(id1, id2);
+        if(!records.empty()) {
+            for(auto record: records) record.print();
+        }
+        else cout << "No se encontró ningún registro en el rango dado" << endl;
+    }
 }
 
 void Menu::insert() {
+    int input;
+    do {
+        cout << "Ingrese un ID para el registro a instertar: ";
+        cin >> input;
+        if(input <= 0) cout << "ID ingresado no es valido.";
+    } while(input <= 0);
+    if(workingClass == sequential) {
 
+    }
+    else if (workingClass == isam) {
+        Record record;
+        record.data.emplace_back(to_string(input));
+        record.data.emplace_back("Male");
+        record.data.emplace_back("25");
+        record.data.emplace_back("1");
+        record.data.emplace_back("0");
+        record.data.emplace_back("Yes");
+        record.data.emplace_back("Private");
+        record.data.emplace_back("Urban");
+        record.data.emplace_back("100.01");
+        record.data.emplace_back("30.8");
+        record.data.emplace_back("smokes");
+        record.data.emplace_back("0");
+        isamFile.insert(record);
+        cout << "Registro insertado correctamente." << endl;
+    }
 }
 
 void Menu::remove() {
@@ -96,6 +135,11 @@ void Menu::remove() {
     if (workingClass == sequential) {
         bool success = sequentialFile.remove(id);
         if (success) cout << "Registro eliminado exitosamente" << endl;
-        else cout << "No se encontro ningun registro con el ID" << id << endl;
+        else cout << "No se encontro ningun registro con el ID: " << id << endl;
+    }
+    else if(workingClass == isam) {
+        bool success = isamFile.remove(id);
+        if(success) cout << "Registro eliminado exitosamente" << endl;
+        else cout << "No se encontro ningun registro con el ID: " << id <<endl;
     }
 }

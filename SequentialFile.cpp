@@ -82,9 +82,6 @@ void print_record(FixedRecord &record) {
     cout << record.bmi << " ";
     cout << record.smoking_status << " ";
     cout << record.stroke << " ";
-    cout << "| ";
-    cout << record.next_file_type << " ";
-    cout << record.next;
     cout << endl;
 }
 
