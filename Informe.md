@@ -23,7 +23,7 @@ De acuerdo a lo aprendido, se espera observar un mejor desempeño en las inserci
 ## Implementación
 ### Sequential File
 Para implementar el Sequential File se utilizó archivos de longitud fija. Logramos implementar los 4 métodos principales solicitados: búsqueda, búsqueda por rango, inserción y eliminación. A continuación se muestra la definición de la clase.
-```
+```cpp
 class SequentialFile {
     string data_file;
     string aux_file = "aux.dat";
@@ -42,7 +42,7 @@ public:
 ```
 El método `merge_data()` lo utilizamos para combinar los registros que hay en el archivo de data (seq-file-data.dat) y el auxiliar (aux.dat) una vez que este pase cierta cantidad de registros `max_aux_size`. Este consiste en encontrar la primera referencia a un registro en el archivo auxiliar y escribir el resto de forma ordenada en el archivo de data, para lo cual se usa un vector de apoyo.
 
-En un inicio utilizamos registros de longitud variable, sin embargo tuvimos dificultades para implementar la búsqueda binaria en este contexto. Los registros fijos nos dan la facilidad de movernos por el data file como si fuera un arreglo. Para leer y escribir estos registros no necesitamos de la clase [Buffer](utils/Buffer.h), sino que lo hacemos directamente con el objeto. Así el proceso de lectura y escritura serían los siguientes: ´stream.read((char*)&record, sizeof(record))´ para leer y ´stream.write((char*)&record, sizeof(record))´ para escribir.
+En un inicio utilizamos registros de longitud variable, sin embargo tuvimos dificultades para implementar la búsqueda binaria en este contexto. Los registros fijos nos dan la facilidad de movernos por el data file como si fuera un arreglo. Para leer y escribir estos registros no necesitamos de la clase [Buffer](utils/Buffer.h), sino que lo hacemos directamente con el objeto. Así el proceso de lectura y escritura serían los siguientes: `stream.read((char*)&record, sizeof(record))` para leer y `stream.write((char*)&record, sizeof(record))` para escribir.
 ### ISAM
 
 
