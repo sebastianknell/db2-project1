@@ -3,6 +3,7 @@
 //
 
 #include "Menu.h"
+#include <chrono>
 
 void Menu::execute() {
     select_working_file();
@@ -30,22 +31,38 @@ void Menu::select_option() {
                 else if(workingClass == isam)
                     isamFile.printAll();
                 break;
-            case 2:
+            case 2:{
+                auto start = chrono::system_clock::now();
                 search();
+                auto end = chrono::system_clock::now();
+                chrono::duration<float, milli> duration = end - start;
+                cout << duration.count() << "s " << endl;
                 print_stats();
-                break;
-            case 3:
+            }   break;
+            case 3: {
+                auto start = chrono::system_clock::now();
                 range_search();
+                auto end = chrono::system_clock::now();
+                chrono::duration<float, milli> duration = end - start;
+                cout << duration.count() << "s " << endl;
                 print_stats();
-                break;
-            case 4:
+            }   break;
+            case 4: {
+                auto start = chrono::system_clock::now();
                 insert();
+                auto end = chrono::system_clock::now();
+                chrono::duration<float, milli> duration = end - start;
+                cout << duration.count() << "s " << endl;
                 print_stats();
-                break;
-            case 5:
+            }   break;
+            case 5: {
+                auto start = chrono::system_clock::now();
                 remove();
+                auto end = chrono::system_clock::now();
+                chrono::duration<float, milli> duration = end - start;
+                cout << duration.count() << "s " << endl;
                 print_stats();
-                break;
+            }   break;
             default:
                 cout << "Ocurrió un error" << endl;
         }
@@ -72,6 +89,16 @@ void Menu::print_stats() {
         cout << "Escrituras: " << countWriteSeq << endl;
         countReadSeq = 0;
         countWriteSeq = 0;
+    }else if(workingClass == isam){
+        cout << "Accesos a memoria secundaria" << endl;
+        cout << "Lecturas: " << countReadIndex + countReadData << endl;
+        cout << "Escrituras: " << countWriteIndex + countWriteData << endl;
+        countReadIndex = 0;
+        countReadData = 0;
+        countWriteIndex = 0;
+        countWriteData = 0;
+    }else{
+        cout << "Nothing to print" << endl;
     }
 }
 

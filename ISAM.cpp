@@ -76,18 +76,26 @@ long long ISAM::find(int id, fstream& stream){
     return pos;
 }
 
+int countReadIndex=0;
+int countWriteIndex=0;
+int countReadData=0;
+int countWriteData=0;
+
 bool ISAM::readIndex(IndexRecord &indexRecord, ifstream &stream) {
     stream.read((char*)&indexRecord, sizeof(indexRecord));
+    countReadIndex++;
     return stream.good();
 }
 
 bool ISAM::readIndex(IndexRecord &indexRecord, fstream &stream) {
     stream.read((char*)&indexRecord, sizeof(indexRecord));
+    countReadIndex++;
     return stream.good();
 }
 
 bool ISAM::writeIndex(IndexRecord &indexRecord, ofstream &stream) {
     stream.write((char*)&indexRecord, sizeof(indexRecord));
+    countWriteIndex++;
     return stream.good();
 }
 
@@ -101,6 +109,7 @@ bool ISAM::readRecord(Record &record, ifstream &stream) {
     bool success = buffer.read(stream);
     if (!success) return false;
     record.unpack(buffer);
+    countReadData++;
     return success;
 }
 
@@ -108,6 +117,7 @@ bool ISAM::writeRecord(Record &record, ofstream &stream, unsigned long &offset) 
     Buffer buffer;
     record.pack(buffer);
     bool success = buffer.write(stream);
+    countWriteData++;
     return success;
 }
 

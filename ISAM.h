@@ -21,6 +21,11 @@ struct IndexRecord {
     long long pos{};
 };
 
+extern int countReadIndex;
+extern int countWriteIndex;
+extern int countReadData;
+extern int countWriteData;
+
 class ISAM {
     string dataFile;
     string indexFile = "index.dat";
