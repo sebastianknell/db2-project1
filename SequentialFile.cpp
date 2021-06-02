@@ -147,12 +147,13 @@ vector<FixedRecord> SequentialFile::range_search(int begin_key, int end_key) {
     FixedRecord temp;
     (loc.fileType == file_type::data ? data : aux).seekg(loc.position);
     readRecord(temp, loc.fileType == file_type::data ? data : aux);
-    records.push_back(temp);
+    if (temp.get_key() >= begin_key) records.push_back(temp);
 
-    while (temp.get_key() < end_key) {
+    while (true) {
         (temp.next_file_type == file_type::data ? data : aux).seekg(temp.next);
         readRecord(temp, temp.next_file_type == file_type::data ? data : aux);
-        records.push_back(temp);
+        if (temp.get_key() <= end_key) records.push_back(temp);
+        else break;
     }
     return records;
 }
@@ -210,23 +211,19 @@ bool SequentialFile::remove(int key) {
     // Mark record as removed
     auto next_file_type = temp.next_file_type;
     auto next = temp.next;
-
-    // TODO assuming the record before is in the same file. change
-    (loc.fileType == file_type::data ? data : aux).seekg(loc.position - sizeof(FixedRecord));
-    success = readRecord(temp, loc.fileType == file_type::data ? data : aux);
-    if (!success) return false;
-
-    temp.next_file_type = next_file_type;
-    temp.next = next;
-    (loc.fileType == file_type::data ? data : aux).seekg(loc.position - sizeof(FixedRecord));
-    success = writeRecord(temp, loc.fileType == file_type::data ? data : aux);
-    if (!success) return false;
-
-    success = readRecord(temp, loc.fileType == file_type::data ? data : aux);
-    if (!success) return false;
     temp.next = -1;
     (loc.fileType == file_type::data ? data : aux).seekg(loc.position);
     success = writeRecord(temp, loc.fileType == file_type::data ? data : aux);
+    if (!success) return false;
+    // Update record before
+    auto prev_loc = find(key-1, data, aux);
+    (prev_loc.fileType == file_type::data ? data : aux).seekg(prev_loc.position);
+    success = readRecord(temp, prev_loc.fileType == file_type::data ? data : aux);
+    if (!success) return false;
+    temp.next_file_type = next_file_type;
+    temp.next = next;
+    (prev_loc.fileType == file_type::data ? data : aux).seekg(prev_loc.position);
+    success = writeRecord(temp, prev_loc.fileType == file_type::data ? data : aux);
     if (!success) return false;
     return true;
 }
