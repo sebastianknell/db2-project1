@@ -15,7 +15,7 @@ int main() {
 
     // LOAD ALL DATA
     ISAM isam;
-    //isam.loadData("stroke-data.csv");
+    isam.loadData("stroke-data.csv");
 
     // TEST RECORD INSTANCE
     Record record;
@@ -33,7 +33,7 @@ int main() {
     record.data.emplace_back("0");
 
     // INSERT TEST / SEARCH TEST
-    //isam.insert(record);
+    isam.insert(record);
     //isam.search(53106);
     //isam.printAll();
     //isam.printIndex();
@@ -45,10 +45,11 @@ int main() {
         i.print();
     }*/
 
-    //isam.remove(53106);
+    // REMOVE TEST
+    isam.remove(53106);
     //isam.search(53106);
     //isam.printIndex();
-    //isam.printAll();
+    isam.printAll();
 
     return 0;
 }

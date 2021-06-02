@@ -262,53 +262,48 @@ bool ISAM::remove(int id) {
     if(!dataIn || !index) return false;
     IndexRecord indexRecord;
     Record dataRecord;
-    vector<IndexRecord> indexBefore;
-    vector<IndexRecord> indexAfter;
-    vector<Record> dataBefore;
-    vector<Record> dataAfter;
+    vector<IndexRecord> indexRewrite;
+    vector<Record> dataRewrite;
+    //vector<long> newPositions;
     unsigned long offset = 0;
 
     if(search(id).get_key() != id) throw logic_error("Didn't find record");
     auto pos = find(id, index);
     index.seekg(0);
     // save data before removed record
-    while(index.tellg() <= pos) {
+    while(index.tellg() < pos) {
         readIndex(indexRecord, index);
-        indexBefore.push_back(indexRecord);
+        indexRewrite.push_back(indexRecord);
         dataIn.seekg(indexRecord.pos);
         readRecord(dataRecord, dataIn);
-        dataBefore.push_back(dataRecord);
+        dataRewrite.push_back(dataRecord);
     }
 
+    printIndexRecord(indexRecord); // should be removed record
     readIndex(indexRecord, index);
-    printIndexRecord(indexRecord);
 
     // save data after removed record
     while(readIndex(indexRecord, index)) {
-        //indexAfter.push_back(indexRecord);
         dataIn.seekg(indexRecord.pos);
         readRecord(dataRecord, dataIn);
-        dataAfter.push_back(dataRecord);
+        dataRewrite.push_back(dataRecord);
+        indexRewrite.push_back(indexRecord);
     }
     dataIn.close();
     index.close();
-    ofstream dataOut(dataFile, ios::out | ios::trunc | ios::binary);
-    ofstream indexOut(indexFile, ios::out | ios::trunc | ios::binary);
-    for(auto & i : indexBefore) {
-        writeIndex(i, indexOut);
-    }
-    for(auto & d : dataBefore) {
-        writeRecord(d, dataOut, offset);
-    }
-    for(auto & d : dataAfter) {
-        indexRecord.pos = dataOut.tellp();
+    ofstream dataOut(dataFile, ios::trunc | ios::binary);
+    ofstream indexOut(indexFile, ios::trunc | ios::binary);
+    for(auto & d : dataRewrite) {
         indexRecord.id = d.get_key();
-        indexAfter.push_back(indexRecord);
+        indexRecord.pos = dataOut.tellp();
         writeRecord(d, dataOut, offset);
+        indexOut.write((char*)&indexRecord, sizeof(indexRecord));
     }
-    for(auto & i : indexAfter) {
+    /*for(auto & i : indexRewrite) {
+        i.pos = newPositions[count];
         writeIndex(i, indexOut);
-    }
+    }*/
+
     dataOut.close();
     indexOut.close();
 
