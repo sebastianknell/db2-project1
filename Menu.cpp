@@ -31,38 +31,22 @@ void Menu::select_option() {
                 else if(workingClass == isam)
                     isamFile.printAll();
                 break;
-            case 2:{
-                auto start = chrono::system_clock::now();
+            case 2:
                 search();
-                auto end = chrono::system_clock::now();
-                chrono::duration<float, milli> duration = end - start;
-                cout << duration.count() << "s " << endl;
                 print_stats();
-            }   break;
-            case 3: {
-                auto start = chrono::system_clock::now();
+                break;
+            case 3:
                 range_search();
-                auto end = chrono::system_clock::now();
-                chrono::duration<float, milli> duration = end - start;
-                cout << duration.count() << "s " << endl;
                 print_stats();
-            }   break;
-            case 4: {
-                auto start = chrono::system_clock::now();
+                break;
+            case 4:
                 insert();
-                auto end = chrono::system_clock::now();
-                chrono::duration<float, milli> duration = end - start;
-                cout << duration.count() << "s " << endl;
                 print_stats();
-            }   break;
-            case 5: {
-                auto start = chrono::system_clock::now();
+                break;
+            case 5:
                 remove();
-                auto end = chrono::system_clock::now();
-                chrono::duration<float, milli> duration = end - start;
-                cout << duration.count() << "s " << endl;
                 print_stats();
-            }   break;
+                break;
             default:
                 cout << "Ocurrió un error" << endl;
         }
@@ -107,14 +91,22 @@ void Menu::search() {
     cout << "Ingrese el ID que desea buscar: ";
     cin >> id;
     if (workingClass == sequential) {
+        auto start = chrono::system_clock::now();
         auto fixedRecord = sequentialFile.search(id);
         if (fixedRecord.has_value()) print_record(fixedRecord.value());
         else cout << "No se encontro ningun registro con el ID: " << id << endl;
+        auto end = chrono::system_clock::now();
+        chrono::duration<float, milli> duration = end - start;
+        cout << duration.count() << "s " << endl;
     }
     else if(workingClass == isam) {
+        auto start = chrono::system_clock::now();
         auto dataRecord = isamFile.search(id);
         if(dataRecord.has_value()) dataRecord->print();
         else cout << "No se encontro ningun registro con el ID: " << id << endl;
+        auto end = chrono::system_clock::now();
+        chrono::duration<float, milli> duration = end - start;
+        cout << duration.count() << "s " << endl;
     }
 }
 
@@ -125,18 +117,26 @@ void Menu::range_search() {
     cout << "Inicio: "; cin >> id1;
     cout << "Fin: "; cin >> id2;
     if (workingClass == sequential) {
+        auto start = chrono::system_clock::now();
         auto records = sequentialFile.range_search(id1, id2);
         if (!records.empty()) {
             for (auto record : records) print_record(record);
         }
         else cout << "No se encontró ningún registro en el rango dado" << endl;
+        auto end = chrono::system_clock::now();
+        chrono::duration<float, milli> duration = end - start;
+        cout << duration.count() << "s " << endl;
     }
     else if(workingClass == isam) {
+        auto start = chrono::system_clock::now();
         auto records = isamFile.rangeSearch(id1, id2);
         if(!records.empty()) {
             for(auto record: records) record.print();
         }
         else cout << "No se encontró ningún registro en el rango dado" << endl;
+        auto end = chrono::system_clock::now();
+        chrono::duration<float, milli> duration = end - start;
+        cout << duration.count() << "s " << endl;
     }
 }
 
@@ -147,6 +147,7 @@ void Menu::insert() {
         cin >> input;
         if(input <= 0) cout << "ID ingresado no es valido";
     } while(input <= 0);
+    auto start = chrono::system_clock::now();
     vector<string> data;
     data.emplace_back(to_string(input));
     data.emplace_back("Male");
@@ -166,12 +167,18 @@ void Menu::insert() {
         if (sequentialFile.insert(fixedRecord))
             cout << "Registro insertado correctamente" << endl;
         else cout << "No se pudo insertar registro" << endl;
+        auto end = chrono::system_clock::now();
+        chrono::duration<float, milli> duration = end - start;
+        cout << duration.count() << "s " << endl;
     }
     else if (workingClass == isam) {
         Record record;
         record.load_data(data);
         isamFile.insert(record);
         cout << "Registro insertado correctamente" << endl;
+        auto end = chrono::system_clock::now();
+        chrono::duration<float, milli> duration = end - start;
+        cout << duration.count() << "s " << endl;
     }
 }
 
@@ -180,13 +187,21 @@ void Menu::remove() {
     cout << "Ingrese el ID que desea remover: ";
     cin >> id;
     if (workingClass == sequential) {
+        auto start = chrono::system_clock::now();
         bool success = sequentialFile.remove(id);
         if (success) cout << "Registro eliminado exitosamente" << endl;
         else cout << "No se encontro ningun registro con el ID: " << id << endl;
+        auto end = chrono::system_clock::now();
+        chrono::duration<float, milli> duration = end - start;
+        cout << duration.count() << "s " << endl;
     }
     else if(workingClass == isam) {
+        auto start = chrono::system_clock::now();
         bool success = isamFile.remove(id);
         if(success) cout << "Registro eliminado exitosamente" << endl;
         else cout << "No se encontro ningun registro con el ID: " << id <<endl;
+        auto end = chrono::system_clock::now();
+        chrono::duration<float, milli> duration = end - start;
+        cout << duration.count() << "s " << endl;
     }
 }
