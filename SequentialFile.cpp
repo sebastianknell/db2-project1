@@ -4,28 +4,15 @@
 
 #include "SequentialFile.h"
 
+int countReadSeq = 0;
+int countWriteSeq = 0;
+
 static long get_file_size(fstream &stream) {
     auto pos = stream.tellg();
     stream.seekg(0, ios::end);
     auto size = stream.tellg();
     stream.seekg(pos);
     return size;
-}
-
-static location_type find_first(fstream &data, fstream &aux) {
-    auto data_pos = data.tellg();
-    auto aux_pos = aux.tellg();
-    data.seekg(ios::beg);
-    aux.seekg(ios::beg);
-    FixedRecord temp1;
-    FixedRecord temp2;
-    readRecord(temp1, data);
-    readRecord(temp2, aux);
-    assert(data.good() && aux.good());
-    data.seekg(data_pos);
-    aux.seekg(aux_pos);
-    if (temp1.get_key() < temp2.get_key()) return {0, file_type::data};
-    else return {0, file_type::aux};
 }
 
 static location_type find(int key, fstream &data, fstream &aux) {
@@ -259,18 +246,15 @@ void SequentialFile::merge_data() {
     aux.close();
 }
 
-int countRead=0;
-int countWrite=0;
-
 bool readRecord(FixedRecord &record, fstream &stream) {
     stream.read((char*)&record, sizeof(record));
     bool success = stream.good();
-    countRead++;
+    countReadSeq++;
     return success;
 }
 
 bool writeRecord(FixedRecord &record, fstream &stream) {
     stream.write((char*)&record, sizeof(record));
-    countWrite++;
+    countWriteSeq++;
     return stream.good();
 }

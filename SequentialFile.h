@@ -11,8 +11,6 @@
 #include <string>
 #include <optional>
 #include "utils/rapidcsv.h"
-#include "utils/Buffer.h"
-//#include "FixedRecord.h"
 
 using namespace std;
 
@@ -65,6 +63,8 @@ struct FixedRecord {
 void print_record(FixedRecord &);
 static bool readRecord(FixedRecord &, fstream&);
 static bool writeRecord(FixedRecord &, fstream&);
+extern int countReadSeq;
+extern int countWriteSeq;
 
 class SequentialFile {
     string data_file;

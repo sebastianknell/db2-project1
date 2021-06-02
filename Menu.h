@@ -22,6 +22,7 @@ class Menu {
     ISAM isamFile;
     void select_working_file();
     void select_option();
+    void print_stats();
     void search();
     void range_search();
     void insert();

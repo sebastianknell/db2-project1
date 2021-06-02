@@ -32,15 +32,19 @@ void Menu::select_option() {
                 break;
             case 2:
                 search();
+                print_stats();
                 break;
             case 3:
                 range_search();
+                print_stats();
                 break;
             case 4:
                 insert();
+                print_stats();
                 break;
             case 5:
                 remove();
+                print_stats();
                 break;
             default:
                 cout << "Ocurrió un error" << endl;
@@ -59,6 +63,16 @@ void Menu::select_working_file() {
     } while (option != 1 && option != 2);
     workingClass = option == 1 ? sequential : isam;
     if (workingClass == sequential) sequentialFile.load_data("stroke-data.csv");
+}
+
+void Menu::print_stats() {
+    if (workingClass == sequential) {
+        cout << "Accesos a memoria secundaria" << endl;
+        cout << "Lecturas: " << countReadSeq << endl;
+        cout << "Escrituras: " << countWriteSeq << endl;
+        countReadSeq = 0;
+        countWriteSeq = 0;
+    }
 }
 
 void Menu::search() {
