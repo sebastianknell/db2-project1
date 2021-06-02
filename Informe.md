@@ -23,9 +23,13 @@ De acuerdo a lo aprendido, se espera observar un mejor desempeño en las inserci
 ## Implementación
 Para poder implementar estas técnicas de organización de archivos ...
 
+- Búsqueda puntual
+
+- Búsqueda por rango
+
 - Inserción
 
-- Búsqueda
+- Eliminación
 
 
 ## Resultados
