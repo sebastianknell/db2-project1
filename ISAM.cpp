@@ -207,49 +207,22 @@ optional<Record> ISAM::search(int id){
 
 vector<Record> ISAM::rangeSearch(int id1, int id2){
     ifstream data(dataFile, ios::binary);
-    ifstream index(indexFile, ios::binary);
+    fstream index(indexFile, ios::in | ios::binary);
     IndexRecord indexRecord;
     Record temp;
     vector<Record> result;
-    long indexSize = sizeof(indexRecord);
-    long long l = 0;
-    long long r = (getFileSize(index) / indexSize) -1 ;
-    while(r > l) {
-        long long mid = (r+l) / 2;
-        index.seekg(mid*indexSize);
-        readIndex(indexRecord, index);
-        if(indexRecord.id < id1) l = mid+1 ;
-        else if (indexRecord.id > id1) r = mid-1;
-        else{
-            data.seekg(indexRecord.pos);
-            readRecord(temp,data);
-            result.push_back(temp);
-            while(indexRecord.id < id2){
-                readIndex(indexRecord, index);
-                data.seekg(indexRecord.pos);
-                readRecord(temp, data);
-                result.push_back(temp);
-            }
-            data.close();
-            index.close();
-            return result;
-        }
-    }
+    auto pos = find(id1, index);
+    index.seekg(pos);
     readIndex(indexRecord, index);
-    if(indexRecord.id == id1) {
+    while(indexRecord.id < id2) {
         data.seekg(indexRecord.pos);
         readRecord(temp, data);
         result.push_back(temp);
-        while(indexRecord.id < id2) {
-            readIndex(indexRecord, index);
-            data.seekg(indexRecord.pos);
-            readRecord(temp, data);
-            result.push_back(temp);
-        }
-        data.close();
-        index.close();
-        return result;
-    }return result;
+        readIndex(indexRecord, index);
+    }
+    data.close();
+    index.close();
+    return result;
 }
 
 bool ISAM::remove(int id) {
