@@ -10,6 +10,7 @@
 #include <vector>
 #include <string>
 #include <optional>
+#include <cstring>
 #include "utils/rapidcsv.h"
 
 using namespace std;
