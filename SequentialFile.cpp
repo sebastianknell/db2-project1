@@ -198,6 +198,7 @@ bool SequentialFile::insert(FixedRecord record) {
 }
 
 bool SequentialFile::remove(int key) {
+    if (key <= 0) return false;
     fstream data(data_file, ios::out | ios::in | ios::binary);
     fstream aux(aux_file, ios::out | ios::in | ios::binary);
     // Search location
@@ -230,33 +231,35 @@ bool SequentialFile::remove(int key) {
 
 // Merge data file and aux file
 void SequentialFile::merge_data() {
-    fstream data(data_file, ios::binary);
-    fstream aux(aux_file, ios::binary);
+    fstream data(data_file, ios::out | ios::in | ios::binary);
+    fstream aux(aux_file, ios::out | ios::in | ios::binary);
     FixedRecord temp1;
-    vector<FixedRecord> records;
-    // TODO what if record with least key is in aux file?
-    do {
+    readRecord(temp1, data);
+    // Skip records before pointer to aux
+    while (temp1.next_file_type == file_type::data) {
+        data.seekg(temp1.next);
         readRecord(temp1, data);
+    }
+    auto offset = data.tellg();
+    offset -= sizeof(FixedRecord);
+    vector<FixedRecord> records;
+    while (temp1.next_file_type != file_type::none) {
         records.push_back(temp1);
-        if (temp1.next_file_type == file_type::aux) {
-            // Read all aux records in chain
-            aux.seekg(temp1.next);
-            FixedRecord temp2;
-            do {
-                readRecord(temp2, aux);
-                records.push_back(temp2);
-                aux.seekg(temp2.next);
-            } while (temp2.next_file_type == file_type::aux);
-        }
-    } while (temp1.next_file_type != file_type::none);
+        (temp1.next_file_type == file_type::data ? data : aux).seekg(temp1.next);
+        readRecord(temp1, temp1.next_file_type == file_type::data ? data : aux);
+    }
 
-    long offset = 0;
+    data.seekg(offset);
     for (auto record : records) {
         record.next_file_type = file_type::data;
         offset += sizeof(record);
         record.next = offset;
         writeRecord(record, data);
     }
+    data.close();
+    aux.close();
+    aux.open(aux_file, fstream ::out | fstream::trunc);
+    aux.close();
 }
 
 bool readRecord(FixedRecord &record, fstream &stream) {
